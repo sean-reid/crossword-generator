@@ -34,12 +34,9 @@ impl Dictionary {
                         
                         if !word.is_empty() && word.chars().all(|c| c.is_alphabetic() || c == '-') {
                             let mut word_clean = word.replace("-", "");
-                            
-                            // Remove trailing digits (Bolt1 -> Bolt)
                             word_clean = word_clean.trim_end_matches(|c: char| c.is_ascii_digit()).to_string();
                             
                             if !word_clean.is_empty() {
-                                // Filter out reference definitions
                                 let def_lower = definition.to_lowercase();
                                 let is_reference = def_lower.starts_with("var. of")
                                     || def_lower.starts_with("variant of")
@@ -64,7 +61,6 @@ impl Dictionary {
                 let len = w.len();
                 let valid_word = len >= 3 && len <= 15 && w.chars().all(|c| c.is_ascii_alphabetic());
                 
-                // Check definition is substantial and not a prefix/suffix/abbreviation
                 let def_lower = def.to_lowercase();
                 let not_special = !def_lower.starts_with("prefix")
                     && !def_lower.starts_with("suffix")
@@ -72,15 +68,14 @@ impl Dictionary {
                     && !def_lower.contains("abbr. ")
                     && !w.ends_with('.');
                 
-                // Check that extracted clue is clean (not empty, not just labels)
                 let clue = Self::extract_clue(def);
                 let clean_clue = clue != "Definition not available" 
-                    && !clue.to_lowercase().contains(&w.to_lowercase())  // No self-reference
-                    && clue.len() > 10  // Require substantial definition
-                    && !clue.to_lowercase().starts_with("of ")  // Not a reference
-                    && !clue.contains(") ")  // No leftover parentheses
+                    && !clue.to_lowercase().contains(&w.to_lowercase())
+                    && clue.len() > 10
+                    && !clue.to_lowercase().starts_with("of ")
+                    && !clue.contains(") ")
                     && !clue.ends_with(")")
-                    && !clue.contains("*");  // No reference markers
+                    && !clue.contains("*");
                 
                 valid_word && not_special && clean_clue
             })
@@ -299,12 +294,26 @@ impl Dictionary {
         def = def.to_lowercase();
         let mut chars = def.chars();
         if let Some(first) = chars.next() {
-            first.to_uppercase().collect::<String>() + chars.as_str()
+            def = first.to_uppercase().collect::<String>() + chars.as_str();
         } else {
-            "Definition not available".to_string()
+            return "Definition not available".to_string();
         }
+        
+        // VERY FINAL: Strip leading POS that got capitalized (like "N.s-shaped")
+        for marker in ["N.", "V.", "Adj.", "Adv.", "Prep.", "Conj."] {
+            if def.starts_with(marker) {
+                def = def[marker.len()..].to_string();
+                // Capitalize first letter again after stripping
+                let mut chars = def.chars();
+                if let Some(first) = chars.next() {
+                    def = first.to_uppercase().collect::<String>() + chars.as_str();
+                }
+                break;
+            }
+        }
+        
+        def
     }
-
     
     pub fn stats(&self) -> DictionaryStats {
         let total_len: usize = self.words.iter().map(|w| w.len()).sum();

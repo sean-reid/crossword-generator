@@ -1,120 +1,68 @@
 # Crossword Generator
 
-High-performance crossword puzzle generator using SAT solving and density optimization. Built with Rust/WASM for the core engine and React for the UI.
+SAT-based crossword puzzle generator with high-density optimization. Built with Rust/WASM and React.
 
 ## Features
 
-- **SAT-based generation**: Uses constraint satisfaction to ensure valid crosswords
-- **Density optimization**: Iteratively finds the densest possible grid layout
-- **Real dictionary**: Includes Oxford English Dictionary with 70,000+ entries
-- **Fast generation**: Typically completes in 5-10 seconds
-- **Minimal UI**: Clean, print-friendly interface
-- **No backend**: Fully static site, works offline after initial load
+- **SAT solving**: Uses constraint satisfaction for valid, connected crosswords
+- **75% density**: Generates densely-packed grids
+- **Clean clues**: Automated extraction from Oxford English Dictionary
+- **Two-phase generation**: Separate encoding and solving with accurate progress tracking
+- **Print support**: Two-page portrait layout (grid + clues)
+- **Show/hide answers**: Toggle for solving mode
 
-## Building
-
-### Prerequisites
-
-- Node.js 18+
-- Rust 1.75+
-- wasm-pack
-
-### Build Steps
+## Quick Start
 
 ```bash
-# Install dependencies
 npm install
-
-# Build WASM module
-npm run build:wasm
-
-# Build WASM with debug logging
-npm run build:wasm:debug
-
-# Build web application
-npm run build:web
-
-# Or build everything at once
 npm run build
-
-# Build with debug logging enabled
-npm run build:debug
 ```
 
-The built site will be in the `docs/` directory, ready for GitHub Pages deployment.
-
-### Debug Mode
-
-To enable verbose console logging from the WASM module:
-
-```bash
-npm run build:debug
-```
-
-This will log:
-- Dictionary loading statistics
-- Word selection details
-- Constraint encoding progress
-- SAT solver status
-- Solution extraction details
-
-Check your browser console for `[WASM]`, `[SOLVER]`, and `[CONSTRAINTS]` prefixed messages.
-
-### Verifying the Build
-
-After building, check that the `docs/` directory contains:
-- `index.html`
-- `assets/` folder with JS/CSS bundles
-- `crossword_wasm_bg.wasm` - The WASM binary
-- `crossword_wasm.js` - WASM JavaScript bindings
-- `.nojekyll` file
-
-If WASM files are missing, the app won't work.
+Output in `docs/` directory, ready for GitHub Pages.
 
 ## Development
 
 ```bash
-# Start development server
-npm run dev
+npm run dev           # Development server
+npm run build:debug   # Build with console logging
 ```
 
-Note: WASM must be built at least once before running the dev server.
+## Build Commands
 
-## Troubleshooting
+- `npm run build:wasm` - Compile Rust to WASM
+- `npm run build:wasm:debug` - WASM with debug logging
+- `npm run build:web` - Build React app
+- `npm run build` - Full build
+- `npm run clean` - Clean build artifacts
 
-### "undefined is not an object" error
-- Ensure WASM files are in the `docs/` directory after build
-- Check browser console for WASM loading errors
-- Verify `wasm-pkg/` directory was created by `npm run build:wasm`
+## Grid Sizes
 
-### Generation fails or times out
-- Try a smaller grid size (8x8 or 10x10)
-- Increase the timeout value
-- Check browser console for Rust panic messages
+- 8×8: ~3 seconds
+- 10×10: ~8 seconds  
+- 12×12: ~15-30 seconds
 
-### Build fails
-- Ensure Rust and wasm-pack are installed
-- Run `wasm-pack --version` to verify installation
-- Try `cargo clean` in `src/wasm/` directory
+## How It Works
+
+1. **Dictionary**: 22,000+ words from Oxford English Dictionary with clean clue extraction
+2. **Encoding**: Converts crossword rules to SAT constraints (placement, connectivity, density)
+3. **Solving**: Varisat SAT solver finds valid grid layouts
+4. **Two-phase progress**: Encoding stats update progress bar mid-generation
 
 ## Architecture
 
-- **Rust/WASM** (`src/wasm/`): Core crossword generation engine
-  - Dictionary parsing and indexing
-  - SAT constraint encoding
-  - Varisat solver integration
-  - Solution building and validation
+- **Rust/WASM** (`src/wasm/`): Core engine with dictionary, encoder, solver
+- **Web Workers** (`src/workers/`): Non-blocking computation, progress updates
+- **React UI** (`src/components/`): Grid, clues, controls
 
-- **Web Worker** (`src/workers/`): Non-blocking WASM interface
-  - WASM module lifecycle management
-  - Progress reporting
-  - Message-based communication
+See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
 
-- **React UI** (`src/components/`): Minimal, clean interface
-  - Grid visualization with proper numbering
-  - Clue display (across/down)
-  - Generation controls
-  - Print support
+## Troubleshooting
+
+**Generation fails**: Try smaller grid (8×8), check browser console for errors
+
+**Slow solving**: 75% density creates complex SAT problems; 20-40s solve time is normal for 12×12
+
+**Print issues**: Use browser print dialog, select portrait orientation
 
 ## License
 
