@@ -32,6 +32,38 @@ struct Args {
     #[arg(short, long, default_value = "Crossword Puzzle Book")]
     title: String,
 
+    /// Author name
+    #[arg(short, long)]
+    author: Option<String>,
+
+    /// Publisher name
+    #[arg(short, long)]
+    publisher: Option<String>,
+
+    /// Edition (e.g., "First Edition", "Volume 1")
+    #[arg(short, long)]
+    edition: Option<String>,
+
+    /// ISBN number
+    #[arg(long)]
+    isbn: Option<String>,
+
+    /// Copyright year
+    #[arg(long)]
+    copyright: Option<String>,
+
+    /// Book description for title page
+    #[arg(short, long)]
+    description: Option<String>,
+
+    /// Path to cover SVG file
+    #[arg(long)]
+    cover_svg: Option<PathBuf>,
+
+    /// Path to title page SVG/decoration file
+    #[arg(long)]
+    title_svg: Option<PathBuf>,
+
     /// Random seed for reproducibility
     #[arg(long)]
     seed: Option<u64>,
@@ -39,10 +71,25 @@ struct Args {
     /// Automatically compile PDF with pdflatex
     #[arg(long)]
     compile: bool,
+
+    /// Number of parallel threads (default: number of CPU cores)
+    #[arg(short = 'j', long)]
+    jobs: Option<usize>,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
+
+    // Set number of rayon threads if specified
+    if let Some(jobs) = args.jobs {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(jobs)
+            .build_global()
+            .context("Failed to set thread pool size")?;
+        println!("Using {} parallel threads", jobs);
+    } else {
+        println!("Using {} parallel threads (CPU cores)", rayon::current_num_threads());
+    }
 
     // Set random seed if provided
     if let Some(seed) = args.seed {
@@ -56,15 +103,23 @@ fn main() -> Result<()> {
     let stats = dict.stats();
     println!("Dictionary loaded: {} words", stats.word_count);
 
-    let config = BookConfig {
-        title: args.title.clone(),
-        grid_size: args.size,
-        puzzles_per_page: 1,
-    };
+    let mut config = BookConfig::new(args.title.clone(), args.size);
+    config.author = args.author;
+    config.publisher = args.publisher;
+    config.edition = args.edition;
+    config.isbn = args.isbn;
+    config.copyright_year = args.copyright;
+    config.description = args.description;
+    
+    // Read SVG files if provided
+    config.cover_svg_path = args.cover_svg.as_ref()
+        .map(|p| p.to_string_lossy().to_string());
+    config.title_svg_path = args.title_svg.as_ref()
+        .map(|p| p.to_string_lossy().to_string());
 
     let mut book = CrosswordBook::new(config);
 
-    println!("\nGenerating {} puzzles of size {}x{}...", args.count, args.size, args.size);
+    println!("\nGenerating {} puzzles of size {}x{} in parallel...", args.count, args.size, args.size);
     let pb = ProgressBar::new(args.count as u64);
     pb.set_style(
         ProgressStyle::default_bar()
@@ -73,30 +128,36 @@ fn main() -> Result<()> {
             .progress_chars("=>-"),
     );
 
-    let mut successful = 0;
-    let mut failed = 0;
+    // Generate puzzles in parallel
+    use rayon::prelude::*;
+    let puzzles: Vec<_> = (0..args.count)
+        .into_par_iter()
+        .filter_map(|i| {
+            match generate_crossword(&dict, args.size) {
+                Ok(puzzle) => {
+                    pb.inc(1);
+                    Some(puzzle)
+                }
+                Err(e) => {
+                    eprintln!("\nWarning: Failed to generate puzzle {}: {}", i + 1, e);
+                    pb.inc(1);
+                    None
+                }
+            }
+        })
+        .collect();
 
-    for i in 0..args.count {
-        pb.set_message(format!("Puzzle {}/{}", i + 1, args.count));
-        
-        match generate_crossword(&dict, args.size) {
-            Ok(puzzle) => {
-                book.add_puzzle(puzzle);
-                successful += 1;
-            }
-            Err(e) => {
-                eprintln!("\nWarning: Failed to generate puzzle {}: {}", i + 1, e);
-                failed += 1;
-            }
-        }
-        
-        pb.inc(1);
+    pb.finish_with_message(format!("Complete! {} successful, {} failed", 
+                                   puzzles.len(), 
+                                   args.count - puzzles.len()));
+
+    if puzzles.is_empty() {
+        anyhow::bail!("No puzzles were generated successfully");
     }
 
-    pb.finish_with_message(format!("Complete! {} successful, {} failed", successful, failed));
-
-    if successful == 0 {
-        anyhow::bail!("No puzzles were generated successfully");
+    // Add all puzzles to book
+    for puzzle in puzzles {
+        book.add_puzzle(puzzle);
     }
 
     println!("\nGenerating LaTeX document...");
