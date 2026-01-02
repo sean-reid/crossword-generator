@@ -92,13 +92,35 @@ impl Dictionary {
     pub fn get_clue(&self, word: &str) -> String {
         let word_upper = word.to_uppercase();
         if let Some(def) = self.entries.get(&word_upper) {
-            Self::extract_clue(def)
+            #[cfg(feature = "debug")]
+            {
+                if def.contains(". b") || def.contains(" b ") {
+                    web_sys::console::log_1(&format!("[DICT] get_clue {}: RAW='{}'", word_upper, def).into());
+                }
+            }
+            
+            let clue = Self::extract_clue(def);
+            
+            #[cfg(feature = "debug")]
+            {
+                if clue.contains(" b ") || clue.contains(". b") {
+                    web_sys::console::log_1(&format!("[DICT] WARN {}: FINAL='{}'", word_upper, clue).into());
+                }
+            }
+            clue
         } else {
             "Definition not available".to_string()
         }
     }
     
     fn extract_clue(definition: &str) -> String {
+        #[cfg(feature = "debug")]
+        {
+            if definition.contains(". b ") {
+                web_sys::console::log_1(&format!("[DICT] extract_clue START with '. b': {}", definition).into());
+            }
+        }
+        
         if definition.trim().is_empty() {
             return "Definition not available".to_string();
         }
@@ -259,11 +281,33 @@ impl Dictionary {
             return "Definition not available".to_string();
         }
         
-        // FINAL: Stop at letter enumeration (after all other cleanup)
-        // Only check b, c, d, e - NOT 'a' as it's too common in regular text
+        // Lowercase FIRST so pattern matching works on capital letters too
+        def = def.to_lowercase();
+        
+        // Strip any remaining em-dash + part of speech (after lowercasing)
+        if def.starts_with("—n.") || def.starts_with("—v.") || def.starts_with("—adj.") || def.starts_with("—adv.") {
+            // Find the space after the POS
+            if let Some(space_pos) = def.find(' ') {
+                def = def[space_pos + 1..].trim().to_string();
+            } else {
+                // No content after POS
+                return "Definition not available".to_string();
+            }
+        }
+        
+        // If what remains is just labels with no content, reject it
+        if def.starts_with("colloq") || def.starts_with("esp") || def.starts_with("usu") {
+            return "Definition not available".to_string();
+        }
+        
+        if def.len() < 10 {
+            return "Definition not available".to_string();
+        }
+        
+        // NOW check for letter enumeration with lowercase patterns
         for letter in ['b', 'c', 'd', 'e'] {
-            let pattern1 = format!(". {}", letter);
-            let pattern2 = format!(" {} ", letter);
+            let pattern1 = format!(". {}", letter);  // ". b", ". c", etc.
+            let pattern2 = format!(" {} ", letter);  // " b ", " c ", etc.
             
             if let Some(pos) = def.find(&pattern1) {
                 def = def[..pos].to_string();
@@ -274,12 +318,12 @@ impl Dictionary {
             }
         }
         
-        // Strip leading enumeration letter
+        // Strip leading enumeration letter (a, b, c already lowercase)
         def = def.trim().to_string();
         if def.len() > 2 {
             let first = def.chars().next();
             let second = def.chars().nth(1);
-            if matches!(first, Some('A') | Some('a') | Some('B') | Some('b') | Some('C') | Some('c'))
+            if matches!(first, Some('a') | Some('b') | Some('c'))
                 && second == Some(' ') {
                 def = def[2..].trim().to_string();
             }
@@ -291,8 +335,7 @@ impl Dictionary {
             return "Definition not available".to_string();
         }
         
-        // Normalize capitalization
-        def = def.to_lowercase();
+        // Capitalize first letter only
         let mut chars = def.chars();
         if let Some(first) = chars.next() {
             def = first.to_uppercase().collect::<String>() + chars.as_str();
@@ -300,11 +343,10 @@ impl Dictionary {
             return "Definition not available".to_string();
         }
         
-        // VERY FINAL: Strip leading POS that got capitalized (like "N.s-shaped")
+        // Strip leading POS that got capitalized
         for marker in ["N.", "V.", "Adj.", "Adv.", "Prep.", "Conj."] {
             if def.starts_with(marker) {
                 def = def[marker.len()..].to_string();
-                // Capitalize first letter again after stripping
                 let mut chars = def.chars();
                 if let Some(first) = chars.next() {
                     def = first.to_uppercase().collect::<String>() + chars.as_str();
