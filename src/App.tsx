@@ -61,7 +61,6 @@ function App() {
           const actualEncodingTime = encodingEndTime - ((window as any).progressStartTime || Date.now());
           const totalEstimate = actualEncodingTime + solving_ms;
           
-          console.log(`ESTIMATE: encoding=${actualEncodingTime}ms, solving=${solving_ms}ms, total=${totalEstimate}ms`);
           
           if (progressWorkerRef.current) {
             progressWorkerRef.current.postMessage({
@@ -75,7 +74,6 @@ function App() {
         case 'ENCODING_COMPLETE':
           const { encoding_time_ms, estimated_solve_ms } = payload;
           const newTotal = encoding_time_ms + estimated_solve_ms;
-          console.log(`ENCODING_COMPLETE: ${encoding_time_ms}ms + ${estimated_solve_ms}ms = ${newTotal}ms`);
           if (progressWorkerRef.current) {
             progressWorkerRef.current.postMessage({
               type: 'UPDATE_ESTIMATE',

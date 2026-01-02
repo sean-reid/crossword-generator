@@ -24,14 +24,12 @@ export function CrosswordGrid({ grid, size, showAnswers = true }: CrosswordGridP
 
         if (startsAcross || startsDown) {
           cellNumbers[y][x] = currentNumber;
-          console.log(`Clue #${currentNumber} at (${x},${y}) - across:${startsAcross}, down:${startsDown}, letter:${grid[y][x]}`);
           currentNumber++;
         }
       }
     }
   }
   
-  console.log(`Total clue numbers: ${currentNumber - 1}`);
 
   const cellSize = Math.min(40, Math.floor(600 / size));
 

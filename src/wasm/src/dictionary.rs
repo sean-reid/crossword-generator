@@ -260,7 +260,8 @@ impl Dictionary {
         }
         
         // FINAL: Stop at letter enumeration (after all other cleanup)
-        for letter in ['a', 'b', 'c', 'd', 'e'] {
+        // Only check b, c, d, e - NOT 'a' as it's too common in regular text
+        for letter in ['b', 'c', 'd', 'e'] {
             let pattern1 = format!(". {}", letter);
             let pattern2 = format!(" {} ", letter);
             
