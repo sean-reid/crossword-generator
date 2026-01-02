@@ -167,9 +167,12 @@ impl Dictionary {
         // Remove part of speech at start - handle compound forms
         for marker in &[
             "prep. & conj. ",
-            "n. & v. ",
+            "n. & adj. ",
             "adj. & n. ",
+            "n. & v. ",
             "v. & n. ",
+            "adj. & adv. ",
+            "adv. & adj. ",
             "attrib. adj. ",
             "attrib.adj. ",
             "n.pl. ",
@@ -303,7 +306,7 @@ impl Dictionary {
         }
         
         // Remove trailing POS
-        for suffix in &[" n. & adj", " adj. & n", " n. & v", " v. & n"] {
+        for suffix in &[" n. & adj", " adj. & n", " n. & v", " v. & n", " adj. & adv", " adv. & adj"] {
             if def.to_lowercase().ends_with(suffix) {
                 def = def[..def.len() - suffix.len()].trim().to_string();
                 break;
