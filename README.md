@@ -122,9 +122,9 @@ cargo build --release -p crossword-cli
 - `-d, --description` - Book description for title page
 
 **Graphics Options:**
-- `--cover-svg` - Path to cover SVG file (e.g., `my-cover.svg`)
+- `--cover-svg` - Path to cover SVG (e.g., `cover.svg`)
 - `--title-svg` - Path to title decoration SVG (e.g., `decoration.svg`)
-- **Note**: If no SVGs provided, uses built-in TikZ decoration (no extra files needed)
+- **Note**: If no images provided, uses built-in TikZ decoration
 
 ## How It Works
 
@@ -146,6 +146,6 @@ cargo build --release -p crossword-cli
 - Progress bar shows real-time generation status
 
 **Custom Graphics:**
-- SVG files are optional - built-in decoration used by default
-- Provide paths to your own SVG files with `--cover-svg` and `--title-svg`
-- Sample SVGs included in `cli/` directory for reference
+- SVG images optional - built-in TikZ decoration by default
+- Provide paths with `--cover-svg` and `--title-svg`
+- Sample SVGs in `cli/` directory for reference

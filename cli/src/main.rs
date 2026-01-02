@@ -168,15 +168,19 @@ fn main() -> Result<()> {
     fs::write(&args.output, latex_content)
         .context("Failed to write output file")?;
 
-    println!("LaTeX document written to: {}", args.output.display());
+    println!("\n✅ LaTeX: {}", args.output.display());
 
     if args.compile {
-        println!("\nCompiling PDF with pdflatex...");
-        compile_pdf(&args.output)?;
+        match compile_pdf(&args.output) {
+            Ok(_) => println!("🎉 Done!"),
+            Err(e) => {
+                eprintln!("\n⚠️  PDF failed: {}", e);
+                eprintln!("But .tex file created successfully");
+                return Err(e);
+            }
+        }
     } else {
-        println!("\nTo compile to PDF, run:");
-        println!("  pdflatex {}", args.output.display());
-        println!("  pdflatex {}  # Run twice for references", args.output.display());
+        println!("To compile: pdflatex {}", args.output.display());
     }
 
     Ok(())
@@ -251,31 +255,45 @@ fn generate_crossword(dict: &Dictionary, size: usize) -> Result<CrosswordPuzzle>
 fn compile_pdf(latex_path: &PathBuf) -> Result<()> {
     use std::process::Command;
     
+    // Check if pdflatex is installed
+    let check = Command::new("which")
+        .arg("pdflatex")
+        .output();
+    
+    if check.is_err() || !check.unwrap().status.success() {
+        eprintln!("\n❌ pdflatex not found");
+        eprintln!("\nInstall MacTeX:");
+        eprintln!("  brew install --cask mactex");
+        eprintln!("\nOr generate .tex only (remove --compile flag)");
+        anyhow::bail!("pdflatex not installed");
+    }
+    
+    println!("Running pdflatex...");
     let output = Command::new("pdflatex")
         .arg("-interaction=nonstopmode")
         .arg(latex_path)
         .output()
-        .context("Failed to run pdflatex - is it installed?")?;
+        .context("Failed to run pdflatex")?;
     
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("pdflatex failed: {}", stderr);
+        eprintln!("\n❌ pdflatex failed");
+        eprintln!("\nBasicTeX often has package issues. Install full MacTeX:");
+        eprintln!("  brew uninstall --cask basictex");
+        eprintln!("  brew install --cask mactex");
+        eprintln!("\nOr see: {}", latex_path.with_extension("log").display());
+        anyhow::bail!("Compilation failed");
     }
     
-    // Run twice for references
-    let output = Command::new("pdflatex")
+    // Second pass
+    let _ = Command::new("pdflatex")
         .arg("-interaction=nonstopmode")
         .arg(latex_path)
-        .output()
-        .context("Failed to run pdflatex second time")?;
-    
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("pdflatex failed on second pass: {}", stderr);
-    }
+        .output();
     
     let pdf_path = latex_path.with_extension("pdf");
-    println!("PDF generated: {}", pdf_path.display());
+    if pdf_path.exists() {
+        println!("✅ PDF: {}", pdf_path.display());
+    }
     
     Ok(())
 }

@@ -3,24 +3,6 @@ use crate::book::CrosswordBook;
 use anyhow::Result;
 use std::fs;
 
-// Default ornamental decoration SVG embedded in code
-const DEFAULT_DECORATION_SVG: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
-<svg width="300" height="60" viewBox="0 0 300 60" xmlns="http://www.w3.org/2000/svg">
-  <g stroke="black" stroke-width="1.5" fill="none">
-    <path d="M 10,30 Q 30,10 50,30 Q 70,50 90,30" stroke-linecap="round"/>
-    <rect x="115" y="15" width="15" height="15" fill="black"/>
-    <rect x="135" y="15" width="15" height="15"/>
-    <rect x="155" y="15" width="15" height="15" fill="black"/>
-    <rect x="115" y="30" width="15" height="15"/>
-    <rect x="135" y="30" width="15" height="15" fill="black"/>
-    <rect x="155" y="30" width="15" height="15"/>
-    <rect x="115" y="45" width="15" height="15" fill="black"/>
-    <rect x="135" y="45" width="15" height="15"/>
-    <rect x="155" y="45" width="15" height="15" fill="black"/>
-    <path d="M 190,30 Q 210,10 230,30 Q 250,50 270,30" stroke-linecap="round"/>
-  </g>
-</svg>"#;
-
 pub struct LatexGenerator {
     cell_size: f32,
 }
@@ -68,10 +50,7 @@ impl LatexGenerator {
 \usepackage{svg}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-
-% Title page styling
-\usepackage{afterpage}
-\usepackage{pagecolor}
+\usepackage{xcolor}
 
 % Custom title page commands
 \newcommand{\subtitle}[1]{\Large #1}
@@ -100,17 +79,17 @@ impl LatexGenerator {
         if let Some(ref cover_svg) = config.cover_svg_path {
             if fs::metadata(cover_svg).is_ok() {
                 latex.push_str(&format!(
-                    "{{\\includesvg[width=0.7\\textwidth]{{{}}}}}\\\\[2cm]\n\n",
+                    "\\includesvg[width=0.7\\textwidth]{{{}}}\n\n\\vspace{{2cm}}\n\n",
                     escape_latex(cover_svg)
                 ));
             } else {
-                eprintln!("Warning: Cover SVG file not found: {}", cover_svg);
+                eprintln!("Warning: Cover file not found: {}", cover_svg);
             }
         }
         
         // Title
         latex.push_str(&format!(
-            "{{\\Huge\\bfseries {}}}\\\\[0.5cm]\n\n",
+            "{{\\Huge\\bfseries {}}}\n\n\\vspace{{0.5cm}}\n\n",
             escape_latex(&config.title)
         ));
         
@@ -118,12 +97,11 @@ impl LatexGenerator {
         if let Some(ref title_svg) = config.title_svg_path {
             if fs::metadata(title_svg).is_ok() {
                 latex.push_str(&format!(
-                    "{{\\includesvg[width=0.5\\textwidth]{{{}}}}}\\\\[1cm]\n\n",
+                    "\\includesvg[width=0.5\\textwidth]{{{}}}\n\n\\vspace{{1cm}}\n\n",
                     escape_latex(title_svg)
                 ));
             } else {
-                eprintln!("Warning: Title SVG file not found: {}", title_svg);
-                // Use fallback
+                eprintln!("Warning: Title decoration file not found: {}", title_svg);
                 latex.push_str(&self.generate_default_decoration());
             }
         } else {
@@ -134,7 +112,7 @@ impl LatexGenerator {
         // Description
         if let Some(ref desc) = config.description {
             latex.push_str(&format!(
-                "{{\\Large\\textit{{{}}}}}\\\\[1.5cm]\n\n",
+                "{{\\Large\\textit{{{}}}}}\n\n\\vspace{{1.5cm}}\n\n",
                 escape_latex(desc)
             ));
         }
@@ -142,7 +120,7 @@ impl LatexGenerator {
         // Author
         if let Some(ref author) = config.author {
             latex.push_str(&format!(
-                "{{\\Large {}}}\\\\[0.3cm]\n\n",
+                "{{\\Large {}}}\n\n\\vspace{{0.3cm}}\n\n",
                 escape_latex(author)
             ));
         }
@@ -150,7 +128,7 @@ impl LatexGenerator {
         // Edition
         if let Some(ref edition) = config.edition {
             latex.push_str(&format!(
-                "{{\\large\\textit{{{}}}}}\\\\[1cm]\n\n",
+                "{{\\large\\textit{{{}}}}}\n\n\\vspace{{1cm}}\n\n",
                 escape_latex(edition)
             ));
         }
@@ -164,14 +142,14 @@ impl LatexGenerator {
             
             if let Some(ref publisher) = config.publisher {
                 latex.push_str(&format!(
-                    "{{\\large {}}}\\\\[0.2cm]\n",
+                    "{{\\large {}}}\n\n\\vspace{{0.2cm}}\n\n",
                     escape_latex(publisher)
                 ));
             }
             
             if let Some(ref isbn) = config.isbn {
                 latex.push_str(&format!(
-                    "ISBN: {}\\\\[0.2cm]\n",
+                    "ISBN: {}\n\n\\vspace{{0.2cm}}\n\n",
                     escape_latex(isbn)
                 ));
             }
@@ -181,12 +159,13 @@ impl LatexGenerator {
         
         // Copyright notice
         if let Some(ref year) = config.copyright_year {
+            latex.push_str("\\vspace{0.5cm}\n\n");
             latex.push_str(&format!(
-                "\\vspace{{0.5cm}}\n{{\\small Copyright \\copyright{} {}",
+                "{{\\small Copyright \\copyright{} {}}}\n\n",
                 year,
                 config.author.as_deref().unwrap_or("All Rights Reserved")
             ));
-            latex.push_str("}}\\\\[0.1cm]\n");
+            latex.push_str("\\vspace{0.1cm}\n\n");
             latex.push_str("{\\small All rights reserved.}\n\n");
         }
         
