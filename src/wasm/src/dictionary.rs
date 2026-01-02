@@ -127,6 +127,9 @@ impl Dictionary {
         
         let mut def = definition.trim().to_string();
         
+        // Remove control characters immediately (except whitespace)
+        def = def.chars().filter(|c| !c.is_control() || c.is_whitespace()).collect::<String>();
+        
         // Remove style labels
         for label in &["literary ", "formal ", "archaic "] {
             if def.to_lowercase().starts_with(label) {
@@ -227,9 +230,6 @@ impl Dictionary {
         
         // Split on semicolon
         def = def.split("; ").next().unwrap_or(&def).trim().to_string();
-        
-        // Remove control characters
-        def = def.chars().filter(|c| !c.is_control() || c.is_whitespace()).collect::<String>();
         
         // Remove etymology
         if let Some(pos) = def.rfind('[') {
