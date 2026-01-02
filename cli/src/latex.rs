@@ -3,15 +3,29 @@ use crate::book::CrosswordBook;
 use anyhow::Result;
 use std::fs;
 
-pub struct LatexGenerator {
-    cell_size: f32,
-}
+// Default ornamental decoration SVG embedded in code
+const DEFAULT_DECORATION_SVG: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="60" viewBox="0 0 300 60" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="black" stroke-width="1.5" fill="none">
+    <path d="M 10,30 Q 30,10 50,30 Q 70,50 90,30" stroke-linecap="round"/>
+    <rect x="115" y="15" width="15" height="15" fill="black"/>
+    <rect x="135" y="15" width="15" height="15"/>
+    <rect x="155" y="15" width="15" height="15" fill="black"/>
+    <rect x="115" y="30" width="15" height="15"/>
+    <rect x="135" y="30" width="15" height="15" fill="black"/>
+    <rect x="155" y="30" width="15" height="15"/>
+    <rect x="115" y="45" width="15" height="15" fill="black"/>
+    <rect x="135" y="45" width="15" height="15"/>
+    <rect x="155" y="45" width="15" height="15" fill="black"/>
+    <path d="M 190,30 Q 210,10 230,30 Q 250,50 270,30" stroke-linecap="round"/>
+  </g>
+</svg>"#;
+
+pub struct LatexGenerator {}
 
 impl LatexGenerator {
     pub fn new() -> Self {
-        Self {
-            cell_size: 0.6,
-        }
+        Self {}
     }
 
     pub fn generate_document(&self, book: &CrosswordBook) -> Result<String> {
@@ -33,6 +47,11 @@ impl LatexGenerator {
             latex.push_str("\\clearpage\n\n");
         }
         
+        // Generate answer key
+        latex.push_str("\\clearpage\n");
+        latex.push_str("\\section*{Answer Key}\n\n");
+        latex.push_str(&self.generate_answer_key(book.puzzles())?);
+        
         latex.push_str("\\end{document}\n");
         
         Ok(latex)
@@ -41,7 +60,7 @@ impl LatexGenerator {
     fn generate_preamble(&self) -> String {
         String::from(
             r"\documentclass[11pt,letterpaper]{book}
-\usepackage[margin=0.75in]{geometry}
+\usepackage[top=0.75in,bottom=0.75in,left=0.6in,right=0.6in,headheight=15pt]{geometry}
 \usepackage{tikz}
 \usepackage{multicol}
 \usepackage{enumitem}
@@ -51,13 +70,24 @@ impl LatexGenerator {
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{xcolor}
+\usepackage{fancyhdr}
+
+% Page style with more header space
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headsep}{0.4in}
 
 % Custom title page commands
 \newcommand{\subtitle}[1]{\Large #1}
 \newcommand{\edition}[1]{\large \textit{#1}}
 
 \setlength{\parindent}{0pt}
-\setlength{\columnsep}{1.5em}
+\setlength{\columnsep}{1.2em}
+
+% Tighter list spacing
+\setlist[enumerate]{itemsep=0.3em,parsep=0pt,topsep=0.3em}
 
 % Remove default title formatting
 \makeatletter
@@ -210,13 +240,104 @@ impl LatexGenerator {
         )
     }
 
+    fn generate_answer_key(&self, puzzles: &[CrosswordPuzzle]) -> Result<String> {
+        let mut latex = String::new();
+        
+        // 4 puzzles per page, 2x2 grid
+        for (page_idx, chunk) in puzzles.chunks(4).enumerate() {
+            if page_idx > 0 {
+                latex.push_str("\\clearpage\n\n");
+            }
+            
+            for (chunk_idx, puzzle) in chunk.iter().enumerate() {
+                let puzzle_num = page_idx * 4 + chunk_idx + 1;
+                
+                // Start a minipage for each answer (2 per row)
+                if chunk_idx % 2 == 0 {
+                    latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
+                } else {
+                    latex.push_str("\\hfill\n");
+                    latex.push_str("\\begin{minipage}[t]{0.48\\textwidth}\n");
+                }
+                
+                latex.push_str("\\centering\n");
+                latex.push_str(&format!("{{\\large\\textbf{{Puzzle {}}}}}\n\n", puzzle_num));
+                latex.push_str("\\vspace{0.3cm}\n\n");
+                latex.push_str(&self.generate_answer_grid(&puzzle.grid)?);
+                latex.push_str("\\end{minipage}\n");
+                
+                // Line break after every 2 puzzles
+                if chunk_idx % 2 == 1 && chunk_idx < chunk.len() - 1 {
+                    latex.push_str("\n\n\\vspace{1cm}\n\n");
+                }
+            }
+            
+            // Add extra space at end if odd number on last page
+            if chunk.len() % 2 == 1 {
+                latex.push_str("\n\n\\vspace{1cm}\n\n");
+            }
+        }
+        
+        Ok(latex)
+    }
+
+    fn generate_answer_grid(&self, grid: &[Vec<Option<char>>]) -> Result<String> {
+        let size = grid.len();
+        let mut latex = String::new();
+        
+        // Scale appropriately for 2 columns - use a fraction of linewidth
+        // This makes each grid fit nicely in its minipage
+        let scale_factor = 0.85;
+        
+        latex.push_str(&format!(
+            "\\begin{{tikzpicture}}[x={{{}\\linewidth/{}}},y={{{}\\linewidth/{}}}]\n",
+            scale_factor, size, scale_factor, size
+        ));
+        
+        // Draw cells with letters
+        for row in 0..size {
+            for col in 0..size {
+                let x = col;
+                let y = size - 1 - row;
+                
+                if let Some(letter) = grid[row][col] {
+                    // White cell with letter
+                    latex.push_str(&format!(
+                        "\\draw ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
+                    ));
+                    
+                    // Add letter in center
+                    latex.push_str(&format!(
+                        "\\node[font=\\footnotesize] at ({},{}) {{{}}};\n",
+                        x as f32 + 0.5, y as f32 + 0.5, letter
+                    ));
+                } else {
+                    // Black cell
+                    latex.push_str(&format!(
+                        "\\fill ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
+                    ));
+                }
+            }
+        }
+        
+        latex.push_str("\\end{tikzpicture}\n");
+        
+        Ok(latex)
+    }
+
     fn generate_puzzle(&self, puzzle: &CrosswordPuzzle) -> Result<String> {
         let mut latex = String::new();
+        
+        // Add more space after the section header
+        latex.push_str("\\vspace{0.5cm}\n");
         
         // Generate grid
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n\n");
+        latex.push_str("\\end{center}\n");
+        latex.push_str("\\vspace{0.5cm}\n\n");
         
         // Generate clues
         latex.push_str(&self.generate_clues(&puzzle.across_clues, &puzzle.down_clues));
@@ -228,7 +349,21 @@ impl LatexGenerator {
         let size = grid.len();
         let mut latex = String::new();
         
-        latex.push_str("\\begin{tikzpicture}[scale=1]\n");
+        // Calculate dynamic cell size based on grid dimensions
+        // Use textwidth to scale proportionally
+        // For a 10x10 grid: ~0.7\textwidth, for 16x16: ~0.9\textwidth
+        let width_ratio = if size <= 10 {
+            0.7
+        } else if size <= 15 {
+            0.85
+        } else {
+            0.9
+        };
+        
+        latex.push_str(&format!(
+            "\\begin{{tikzpicture}}[x={{{}\\textwidth/{}}},y={{{}\\textwidth/{}}}]\n",
+            width_ratio, size, width_ratio, size
+        ));
         
         // Number tracking for clues
         let mut numbers = vec![vec![None; size]; size];
@@ -257,28 +392,28 @@ impl LatexGenerator {
         // Draw cells
         for row in 0..size {
             for col in 0..size {
-                let x = col as f32 * self.cell_size;
-                let y = (size - 1 - row) as f32 * self.cell_size;
+                let x = col;
+                let y = size - 1 - row;
                 
                 if grid[row][col].is_some() {
                     // White cell
                     latex.push_str(&format!(
-                        "\\draw ({:.2},{:.2}) rectangle ({:.2},{:.2});\n",
-                        x, y, x + self.cell_size, y + self.cell_size
+                        "\\draw ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
                     ));
                     
                     // Add number if present
                     if let Some(num) = numbers[row][col] {
                         latex.push_str(&format!(
-                            "\\node[anchor=north west,font=\\tiny] at ({:.2},{:.2}) {{{}}};\n",
-                            x + 0.05, y + self.cell_size - 0.05, num
+                            "\\node[anchor=north west,font=\\scriptsize,inner sep=0.02] at ({},{}) {{{}}};\n",
+                            x as f32 + 0.05, y as f32 + 0.95, num
                         ));
                     }
                 } else {
                     // Black cell
                     latex.push_str(&format!(
-                        "\\fill ({:.2},{:.2}) rectangle ({:.2},{:.2});\n",
-                        x, y, x + self.cell_size, y + self.cell_size
+                        "\\fill ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
                     ));
                 }
             }
@@ -292,11 +427,11 @@ impl LatexGenerator {
     fn generate_clues(&self, across_clues: &[Clue], down_clues: &[Clue]) -> String {
         let mut latex = String::new();
         
-        latex.push_str("\\begin{multicols}{2}\n");
-        
-        // Across clues
+        // Use minipages with [t] top alignment instead of multicols
+        latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Across}\n");
-        latex.push_str("\\begin{enumerate}[itemsep=0.5em]\n");
+        latex.push_str("\\raggedright\n");
+        latex.push_str("\\begin{enumerate}\n");
         for clue in across_clues {
             latex.push_str(&format!(
                 "\\setcounter{{enumi}}{{{}}} \\item {}\n",
@@ -304,13 +439,13 @@ impl LatexGenerator {
                 escape_latex(&clue.clue)
             ));
         }
-        latex.push_str("\\end{enumerate}\n\n");
-        
-        latex.push_str("\\columnbreak\n\n");
-        
-        // Down clues
+        latex.push_str("\\end{enumerate}\n");
+        latex.push_str("\\end{minipage}\n");
+        latex.push_str("\\hfill\n");
+        latex.push_str("\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Down}\n");
-        latex.push_str("\\begin{enumerate}[itemsep=0.5em]\n");
+        latex.push_str("\\raggedright\n");
+        latex.push_str("\\begin{enumerate}\n");
         for clue in down_clues {
             latex.push_str(&format!(
                 "\\setcounter{{enumi}}{{{}}} \\item {}\n",
@@ -319,8 +454,7 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
-        
-        latex.push_str("\\end{multicols}\n");
+        latex.push_str("\\end{minipage}\n");
         
         latex
     }
@@ -333,7 +467,8 @@ impl Default for LatexGenerator {
 }
 
 fn escape_latex(s: &str) -> String {
-    s.replace('&', "\\&")
+    s.replace('\\', "\\textbackslash{}")
+        .replace('&', "\\&")
         .replace('%', "\\%")
         .replace('$', "\\$")
         .replace('#', "\\#")
@@ -342,7 +477,6 @@ fn escape_latex(s: &str) -> String {
         .replace('}', "\\}")
         .replace('~', "\\textasciitilde{}")
         .replace('^', "\\textasciicircum{}")
-        .replace('\\', "\\textbackslash{}")
 }
 
 #[cfg(test)]

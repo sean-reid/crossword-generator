@@ -275,25 +275,23 @@ fn compile_pdf(latex_path: &PathBuf) -> Result<()> {
         .output()
         .context("Failed to run pdflatex")?;
     
-    if !output.status.success() {
-        eprintln!("\n❌ pdflatex failed");
-        eprintln!("\nBasicTeX often has package issues. Install full MacTeX:");
-        eprintln!("  brew uninstall --cask basictex");
-        eprintln!("  brew install --cask mactex");
-        eprintln!("\nOr see: {}", latex_path.with_extension("log").display());
-        anyhow::bail!("Compilation failed");
-    }
-    
-    // Second pass
+    // Second pass for references
     let _ = Command::new("pdflatex")
         .arg("-interaction=nonstopmode")
         .arg(latex_path)
         .output();
     
+    // Check if PDF was actually created (even if pdflatex had warnings)
     let pdf_path = latex_path.with_extension("pdf");
     if pdf_path.exists() {
         println!("✅ PDF: {}", pdf_path.display());
+        Ok(())
+    } else {
+        eprintln!("\n❌ pdflatex failed - no PDF created");
+        eprintln!("\nBasicTeX often has package issues. Install full MacTeX:");
+        eprintln!("  brew uninstall --cask basictex");
+        eprintln!("  brew install --cask mactex");
+        eprintln!("\nSee: {}", latex_path.with_extension("log").display());
+        anyhow::bail!("Compilation failed")
     }
-    
-    Ok(())
 }
