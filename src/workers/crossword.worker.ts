@@ -41,10 +41,10 @@ async function initializeWasm() {
     let wasm;
     try {
       // Try importing the generated WASM bindings
-      wasm = await import('../../wasm-pkg/crossword_wasm.js');
+      wasm = await import('../../wasm-pkg/crossword_core.js');
     } catch (e) {
       // Fallback to try without .js extension
-      wasm = await import('../../wasm-pkg/crossword_wasm');
+      wasm = await import('../../wasm-pkg/crossword_core');
     }
     
     self.postMessage({ type: 'PROGRESS', payload: { stage: 'Initializing WASM runtime', percent: 25 } });

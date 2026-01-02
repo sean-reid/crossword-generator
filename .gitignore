@@ -4,11 +4,20 @@ node_modules/
 # Build outputs
 /wasm-pkg
 /dist
-src/wasm/target
+/docs
+wasm/target
+cli/target
 
 # Rust
 /target
 Cargo.lock
+
+# LaTeX intermediate files
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
 
 # IDE
 .vscode/

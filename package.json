@@ -4,12 +4,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:wasm": "cd src/wasm && wasm-pack build --target web --out-dir ../../wasm-pkg",
-    "build:wasm:debug": "cd src/wasm && wasm-pack build --target web --out-dir ../../wasm-pkg -- --features debug",
+    "build:wasm": "cd wasm && wasm-pack build --target web --out-dir ../wasm-pkg --features wasm",
+    "build:wasm:debug": "cd wasm && wasm-pack build --target web --out-dir ../wasm-pkg --features wasm,debug",
     "build:web": "tsc && vite build",
     "postbuild:web": "node scripts/copy-wasm.js",
     "build": "npm run build:wasm && npm run build:web",
     "build:debug": "npm run build:wasm:debug && npm run build:web",
+    "build:cli": "cargo build --release -p crossword-cli",
     "preview": "vite preview"
   },
   "dependencies": {

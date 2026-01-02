@@ -1,37 +1,35 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { copyFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const wasmPkgDir = 'wasm-pkg';
-const docsDir = 'docs';
+const outDir = 'docs';
 
-if (!existsSync(wasmPkgDir)) {
-  console.error('Error: wasm-pkg directory not found. Run npm run build:wasm first.');
-  process.exit(1);
-}
-
-// Create docs directory if it doesn't exist
-if (!existsSync(docsDir)) {
-  mkdirSync(docsDir, { recursive: true });
-}
-
-// Copy all WASM-related files
-const files = readdirSync(wasmPkgDir);
-let copiedCount = 0;
-
-for (const file of files) {
-  // Copy .wasm, .js, and .d.ts files
-  if (file.endsWith('.wasm') || file.endsWith('.js') || file.endsWith('.d.ts')) {
-    const src = join(wasmPkgDir, file);
-    const dest = join(docsDir, file);
-    
-    try {
-      copyFileSync(src, dest);
-      console.log(`Copied: ${file}`);
-      copiedCount++;
-    } catch (err) {
-      console.error(`Failed to copy ${file}:`, err.message);
+if (existsSync(wasmPkgDir) && existsSync(outDir)) {
+  const files = readdirSync(wasmPkgDir);
+  let copied = 0;
+  
+  for (const file of files) {
+    if (file.endsWith('.wasm')) {
+      try {
+        copyFileSync(join(wasmPkgDir, file), join(outDir, file));
+        console.log(`Copied WASM: ${file}`);
+        copied++;
+      } catch (err) {
+        console.error(`Failed to copy ${file}:`, err);
+      }
     }
   }
+  
+  if (copied > 0) {
+    console.log(`\n✓ Copied ${copied} WASM file(s) to ${outDir}/`);
+  } else {
+    console.log(`\n⚠ No WASM files found in ${wasmPkgDir}/`);
+  }
+} else {
+  if (!existsSync(wasmPkgDir)) {
+    console.error(`Error: ${wasmPkgDir}/ not found. Run 'npm run build:wasm' first.`);
+  }
+  if (!existsSync(outDir)) {
+    console.error(`Error: ${outDir}/ not found. Build may have failed.`);
+  }
 }
-
-console.log(`\nSuccessfully copied ${copiedCount} WASM files to ${docsDir}/`);

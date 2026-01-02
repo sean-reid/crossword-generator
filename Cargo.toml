@@ -1,0 +1,8 @@
+[workspace]
+members = ["wasm", "cli"]
+resolver = "2"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+varisat = "0.2"
+rand = "0.8"
