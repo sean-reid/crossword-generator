@@ -75,6 +75,10 @@ struct Args {
     /// Number of parallel threads (default: number of CPU cores)
     #[arg(short = 'j', long)]
     jobs: Option<usize>,
+
+    /// Path to word allowlist file (one word per line, filters dictionary)
+    #[arg(long)]
+    allowlist: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
@@ -99,7 +103,14 @@ fn main() -> Result<()> {
     }
 
     println!("Initializing dictionary...");
-    let dict = Dictionary::new();
+    let dict = if let Some(ref allowlist_path) = args.allowlist {
+        let allowlist_text = fs::read_to_string(allowlist_path)
+            .context("Failed to read allowlist file")?;
+        println!("Using allowlist: {}", allowlist_path.display());
+        Dictionary::with_allowlist(Some(&allowlist_text))
+    } else {
+        Dictionary::new()
+    };
     let stats = dict.stats();
     println!("Dictionary loaded: {} words", stats.word_count);
 

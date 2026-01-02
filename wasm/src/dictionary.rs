@@ -15,8 +15,20 @@ pub struct Dictionary {
 
 impl Dictionary {
     pub fn new() -> Self {
+        Self::with_allowlist(None)
+    }
+    
+    pub fn with_allowlist(allowlist: Option<&str>) -> Self {
         let dict_text = include_str!("../Oxford_English_Dictionary.txt");
         let mut entries = HashMap::new();
+        
+        // Parse allowlist if provided
+        let allowed_words: Option<std::collections::HashSet<String>> = allowlist.map(|list| {
+            list.lines()
+                .map(|line| line.trim().to_uppercase())
+                .filter(|line| !line.is_empty() && line.chars().all(|c| c.is_ascii_alphabetic()))
+                .collect()
+        });
         
         for line in dict_text.lines() {
             let trimmed = line.trim();
@@ -46,7 +58,15 @@ impl Dictionary {
                                     || (def_lower.starts_with("of ") && def_lower.contains("*"));
                                 
                                 if !is_reference {
-                                    entries.insert(word_clean.to_uppercase(), definition.to_string());
+                                    let word_upper = word_clean.to_uppercase();
+                                    // Check allowlist if provided
+                                    if let Some(ref allowed) = allowed_words {
+                                        if allowed.contains(&word_upper) {
+                                            entries.insert(word_upper, definition.to_string());
+                                        }
+                                    } else {
+                                        entries.insert(word_upper, definition.to_string());
+                                    }
                                 }
                             }
                         }

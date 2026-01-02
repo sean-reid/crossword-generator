@@ -43,8 +43,9 @@ crossword-generator/
 
 ## Features
 
-- **Web App**: Interactive browser-based puzzle generation
+- **Web App**: Interactive browser-based puzzle generation (uses built-in clean word filter)
 - **CLI Tool**: Generate professional LaTeX books ready for publishing
+- **Word Filtering**: Custom allowlist support to control vocabulary
 - **Parallel Generation**: Uses all CPU cores with rayon for fast batch generation
 - **Publishing Ready**: Customizable title page with author, ISBN, publisher info
 - **Custom Graphics**: Embed SVG cover art and decorations
@@ -77,6 +78,12 @@ cargo build --release -p crossword-cli
 ```bash
 # Basic - generate 10 puzzles in parallel
 ./target/release/crossword-cli -c 10 -o book.tex
+
+# With custom word allowlist (filters out unwanted words)
+./target/release/crossword-cli \
+    --count 50 \
+    --allowlist my-clean-words.txt \
+    -o clean-book.tex
 
 # Professional book ready for Amazon KDP
 ./target/release/crossword-cli \
@@ -111,6 +118,7 @@ cargo build --release -p crossword-cli
 - `-j, --jobs` - Parallel threads (default: CPU cores)
 - `--seed` - Random seed for reproducibility
 - `--compile` - Auto-compile PDF with pdflatex
+- `--allowlist` - Path to word allowlist file (one word per line, filters dictionary)
 
 **Publishing Options:**
 - `-t, --title` - Book title

@@ -52,12 +52,14 @@ mod wasm_interface {
     pub fn initialize() -> Result<JsValue, JsValue> {
         use crate::debug_log;
         
-        debug_log!("[WASM] Initializing dictionary...");
+        debug_log!("[WASM] Initializing dictionary with clean allowlist...");
         
-        let dict = Dictionary::new();
+        // Use embedded clean allowlist for web to keep it family-friendly
+        let allowlist = include_str!("../clean_allowlist.txt");
+        let dict = Dictionary::with_allowlist(Some(allowlist));
         let stats = dict.stats();
         
-        debug_log!("[WASM] Dictionary loaded: {} words", stats.word_count);
+        debug_log!("[WASM] Dictionary loaded: {} words (filtered)", stats.word_count);
         
         let mut dict_lock = DICTIONARY.lock().unwrap();
         *dict_lock = Some(dict);
