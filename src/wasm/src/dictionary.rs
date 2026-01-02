@@ -163,20 +163,19 @@ impl Dictionary {
             }
         }
         
-        // Extract first numbered definition - only if number is at START followed by space
+        // Extract first numbered definition
+        // Pattern: "1 definition" or "Comb. form 1 definition"
+        // But NOT: "19th century" (digit not followed by space)
         def = def.trim().to_string();
         
-        if def.len() > 2 {
-            let first_char = def.chars().next();
-            // Check if starts with digit followed by space (like "1 definition" not "19th century")
-            if first_char.map_or(false, |c| c.is_ascii_digit()) {
-                let second_char = def.chars().nth(1);
-                if second_char == Some(' ') {
-                    // It's a numbered definition like "1 something"
-                    def = def[2..].trim().to_string();
-                }
-                // Otherwise it's something like "19th" - leave it alone
+        // Find first occurrence of digit followed by space
+        if let Some(pos) = def.find(|c: char| c.is_ascii_digit()) {
+            // Check if this digit is followed by a space
+            if pos + 1 < def.len() && def.chars().nth(pos + 1) == Some(' ') {
+                // It's a numbered definition - skip everything up to and including the digit and space
+                def = def[pos + 2..].trim().to_string();
             }
+            // Otherwise leave it (like "19th")
         }
         
         // Remove usage labels
