@@ -163,12 +163,19 @@ impl Dictionary {
             }
         }
         
-        // Extract first numbered definition
-        if let Some(digit_pos) = def.find(|c: char| c.is_ascii_digit()) {
-            if digit_pos > 0 {
-                def = def[digit_pos + 1..].trim_start().to_string();
-            } else {
-                def = def[1..].trim_start().to_string();
+        // Extract first numbered definition - only if number is at START followed by space
+        def = def.trim().to_string();
+        
+        if def.len() > 2 {
+            let first_char = def.chars().next();
+            // Check if starts with digit followed by space (like "1 definition" not "19th century")
+            if first_char.map_or(false, |c| c.is_ascii_digit()) {
+                let second_char = def.chars().nth(1);
+                if second_char == Some(' ') {
+                    // It's a numbered definition like "1 something"
+                    def = def[2..].trim().to_string();
+                }
+                // Otherwise it's something like "19th" - leave it alone
             }
         }
         
