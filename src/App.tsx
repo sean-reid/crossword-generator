@@ -6,7 +6,6 @@ import { LoadingOverlay } from './components/LoadingOverlay';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { 
   CrosswordPuzzle, 
-  DictionaryStats, 
   GenerationState, 
   WorkerMessage 
 } from './types/crossword';
@@ -14,10 +13,9 @@ import {
 function App() {
   const [state, setState] = useState<GenerationState>('UNINITIALIZED');
   const [puzzle, setPuzzle] = useState<CrosswordPuzzle | null>(null);
-  const [dictionaryStats, setDictionaryStats] = useState<DictionaryStats | null>(null);
   const [progress, setProgress] = useState({ stage: '', percent: 0 });
   const [error, setError] = useState<string | null>(null);
-  const [showAnswers, setShowAnswers] = useState(true);
+  const [showAnswers, setShowAnswers] = useState(false);
   
   const workerRef = useRef<Worker | null>(null);
   const progressWorkerRef = useRef<Worker | null>(null);
@@ -50,7 +48,6 @@ function App() {
 
       switch (type) {
         case 'READY':
-          setDictionaryStats(payload.dictionaryStats);
           setState('READY');
           break;
         
@@ -180,11 +177,11 @@ function App() {
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-7xl mx-auto">
-          <header className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <header className="text-center mb-6 md:mb-8 px-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               Crossword Generator
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm md:text-base text-gray-600">
               SAT-based puzzle generation with high-density optimization
             </p>
           </header>
@@ -203,20 +200,21 @@ function App() {
           )}
 
           {(state === 'READY' || state === 'COMPLETE' || state === 'GENERATING') && (
-            <div className="grid lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-1">
-                <ControlPanel
-                  onGenerate={handleGenerate}
-                  isGenerating={state === 'GENERATING'}
-                  dictionaryStats={dictionaryStats}
-                  metadata={puzzle?.metadata || null}
-                  showAnswers={showAnswers}
-                  onToggleAnswers={setShowAnswers}
-                  onPrint={() => window.print()}
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-1 order-first lg:order-first">
+                <div className="sticky top-4">
+                  <ControlPanel
+                    onGenerate={handleGenerate}
+                    isGenerating={state === 'GENERATING'}
+                    metadata={puzzle?.metadata || null}
+                    showAnswers={showAnswers}
+                    onToggleAnswers={setShowAnswers}
+                    onPrint={() => window.print()}
+                  />
+                </div>
               </div>
 
-              <div className="lg:col-span-3 space-y-8">
+              <div className="lg:col-span-3 space-y-4 lg:space-y-8 order-last lg:order-last">
                 <div className="print-layout">
                 {puzzle && (
                   <>

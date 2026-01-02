@@ -4,7 +4,7 @@ interface CrosswordGridProps {
   showAnswers?: boolean;
 }
 
-export function CrosswordGrid({ grid, size, showAnswers = true }: CrosswordGridProps) {
+export function CrosswordGrid({ grid, size, showAnswers = false }: CrosswordGridProps) {
   // Calculate cell numbers
   const cellNumbers: (number | null)[][] = Array(size).fill(null).map(() => Array(size).fill(null));
   let currentNumber = 1;
@@ -31,14 +31,15 @@ export function CrosswordGrid({ grid, size, showAnswers = true }: CrosswordGridP
   }
   
 
-  const cellSize = Math.min(40, Math.floor(600 / size));
+  const cellSize = Math.min(40, Math.floor(Math.min(600, typeof window !== 'undefined' ? window.innerWidth - 32 : 600) / size));
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center overflow-x-auto">
       <div 
         className="inline-grid gap-0 border-2 border-gray-900"
         style={{
           gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+          touchAction: 'pan-x pan-y',
         }}
       >
         {grid.map((row, y) =>

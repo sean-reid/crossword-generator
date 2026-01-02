@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { CrosswordMetadata, DictionaryStats } from '../types/crossword';
+import { CrosswordMetadata } from '../types/crossword';
 
 interface ControlPanelProps {
   onGenerate: (size: number) => void;
   isGenerating: boolean;
-  dictionaryStats: DictionaryStats | null;
   metadata: CrosswordMetadata | null;
   showAnswers: boolean;
   onToggleAnswers: (show: boolean) => void;
@@ -14,7 +13,6 @@ interface ControlPanelProps {
 export function ControlPanel({ 
   onGenerate, 
   isGenerating, 
-  dictionaryStats, 
   metadata,
   showAnswers,
   onToggleAnswers,
@@ -57,16 +55,6 @@ export function ControlPanel({
         {isGenerating ? 'Generating...' : 'Generate'}
       </button>
 
-      {dictionaryStats && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Dictionary</h3>
-          <div className="text-sm text-gray-600 space-y-1">
-            <div>{dictionaryStats.word_count.toLocaleString()} words</div>
-            <div>Max length: {dictionaryStats.max_word_length}</div>
-          </div>
-        </div>
-      )}
-
       {metadata && (
         <div className="mt-4 pt-4 border-t border-gray-200">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Statistics</h3>
@@ -83,15 +71,23 @@ export function ControlPanel({
         <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Options</h3>
           
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showAnswers}
-              onChange={(e) => onToggleAnswers(e.target.checked)}
-              className="rounded"
-            />
-            <span>Show answers</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-700">Show answers</span>
+            <button
+              onClick={() => onToggleAnswers(!showAnswers)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 ${
+                showAnswers ? 'bg-gray-900' : 'bg-gray-300'
+              }`}
+              role="switch"
+              aria-checked={showAnswers}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  showAnswers ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
           
           <button
             onClick={onPrint}
