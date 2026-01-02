@@ -144,8 +144,24 @@ impl Dictionary {
             }
         }
         
-        // Remove part of speech at start
-        for marker in &["attrib. adj. ", "attrib.adj. ", "n.pl. ", "v.tr. ", "v.intr. ", "adv. ", "adj. ", "n. ", "v. ", "prep. ", "conj. "] {
+        // Remove part of speech at start - handle compound forms
+        for marker in &[
+            "prep. & conj. ",
+            "n. & v. ",
+            "adj. & n. ",
+            "v. & n. ",
+            "attrib. adj. ",
+            "attrib.adj. ",
+            "n.pl. ",
+            "v.tr. ",
+            "v.intr. ",
+            "adv. ",
+            "adj. ",
+            "n. ",
+            "v. ",
+            "prep. ",
+            "conj. "
+        ] {
             if def.to_lowercase().starts_with(marker) {
                 def = def[marker.len()..].to_string();
                 break;
@@ -153,6 +169,30 @@ impl Dictionary {
         }
         
         def = def.trim().to_string();
+        
+        // Remove stylistic markers after POS (Poet., archaic, literary, etc.)
+        let style_pattern = |s: &str| {
+            s.to_lowercase().starts_with("poet. ")
+                || s.to_lowercase().starts_with("archaic ")
+                || s.to_lowercase().starts_with("literary ")
+                || s.to_lowercase().starts_with("formal ")
+                || s.to_lowercase().starts_with("colloq. ")
+                || s.to_lowercase().starts_with("derog. ")
+                || s.to_lowercase().starts_with("joc. ")
+        };
+        
+        while style_pattern(&def) {
+            if let Some(space_pos) = def.find(' ') {
+                def = def[space_pos + 1..].trim().to_string();
+            } else {
+                break;
+            }
+        }
+        
+        // Remove "or" connectors after style markers
+        if def.to_lowercase().starts_with("or ") {
+            def = def[3..].trim().to_string();
+        }
         
         // Remove plural/conjugation notes at start
         if def.starts_with('(') && def.len() > 3 {
