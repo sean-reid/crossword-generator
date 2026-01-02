@@ -2,6 +2,8 @@
 let progressInterval: number | null = null;
 let startTime = 0;
 let estimatedTime = 1000;
+let encodingCompleteTime = 0;
+let actualEncodingTime = 0;
 
 self.onmessage = (event: MessageEvent) => {
   const { type, payload } = event.data;
@@ -10,18 +12,34 @@ self.onmessage = (event: MessageEvent) => {
     case 'START':
       startTime = Date.now();
       estimatedTime = payload.estimatedTime || 1000;
+      encodingCompleteTime = 0;
+      actualEncodingTime = 0;
       
       if (progressInterval) {
         clearInterval(progressInterval);
       }
       
       progressInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const percent = Math.min(95, (elapsed / estimatedTime) * 100);
+        const now = Date.now();
+        const elapsed = now - startTime;
         
-        const stage = elapsed < estimatedTime * 0.3 ? 'Encoding constraints...' :
-                     elapsed < estimatedTime * 0.7 ? 'Solving SAT problem...' :
-                     'Extracting solution...';
+        let percent: number;
+        let stage: string;
+        
+        if (encodingCompleteTime === 0) {
+          // Still encoding or waiting for encoding to complete
+          percent = Math.min(30, (elapsed / estimatedTime) * 100);
+          stage = elapsed < 1000 ? 'Starting...' : 'Encoding constraints...';
+        } else {
+          // Encoding complete, now solving
+          const timeSinceSolveStart = now - encodingCompleteTime;
+          const totalElapsed = actualEncodingTime + timeSinceSolveStart;
+          percent = Math.min(95, (totalElapsed / estimatedTime) * 100);
+          
+          stage = timeSinceSolveStart < (estimatedTime - actualEncodingTime) * 0.8 
+            ? 'Solving SAT problem...' 
+            : 'Extracting solution...';
+        }
         
         self.postMessage({ 
           type: 'UPDATE',
@@ -34,7 +52,11 @@ self.onmessage = (event: MessageEvent) => {
       break;
 
     case 'UPDATE_ESTIMATE':
-      // Update estimate mid-flight
+      // Update estimate with actual encoding time
+      if (payload.actualEncodingTime !== undefined) {
+        actualEncodingTime = payload.actualEncodingTime;
+        encodingCompleteTime = Date.now();
+      }
       estimatedTime = payload.estimatedTime;
       break;
 
@@ -43,6 +65,8 @@ self.onmessage = (event: MessageEvent) => {
         clearInterval(progressInterval);
         progressInterval = null;
       }
+      encodingCompleteTime = 0;
+      actualEncodingTime = 0;
       break;
   }
 };

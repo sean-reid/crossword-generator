@@ -74,10 +74,14 @@ function App() {
         case 'ENCODING_COMPLETE':
           const { encoding_time_ms, estimated_solve_ms } = payload;
           const newTotal = encoding_time_ms + estimated_solve_ms;
+          
           if (progressWorkerRef.current) {
             progressWorkerRef.current.postMessage({
               type: 'UPDATE_ESTIMATE',
-              payload: { estimatedTime: newTotal }
+              payload: { 
+                estimatedTime: newTotal,
+                actualEncodingTime: encoding_time_ms
+              }
             });
           }
           break;
