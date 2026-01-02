@@ -64,7 +64,7 @@ impl LatexGenerator {
         latex.push_str("\\end{center}\n\n");
         
         // Generate clues
-        latex.push_str(&self.generate_clues(&puzzle.clues));
+        latex.push_str(&self.generate_clues(&puzzle.across_clues, &puzzle.down_clues));
         
         Ok(latex)
     }
@@ -134,31 +134,19 @@ impl LatexGenerator {
         Ok(latex)
     }
 
-    fn generate_clues(&self, clues: &[Clue]) -> String {
+    fn generate_clues(&self, across_clues: &[Clue], down_clues: &[Clue]) -> String {
         let mut latex = String::new();
-        
-        // Separate across and down clues
-        let mut across: Vec<&Clue> = clues.iter()
-            .filter(|c| c.direction == "across")
-            .collect();
-        let mut down: Vec<&Clue> = clues.iter()
-            .filter(|c| c.direction == "down")
-            .collect();
-        
-        // Sort by number
-        across.sort_by_key(|c| c.number);
-        down.sort_by_key(|c| c.number);
         
         latex.push_str("\\begin{multicols}{2}\n");
         
         // Across clues
         latex.push_str("\\subsection*{Across}\n");
         latex.push_str("\\begin{enumerate}[itemsep=0.5em]\n");
-        for clue in &across {
+        for clue in across_clues {
             latex.push_str(&format!(
                 "\\setcounter{{enumi}}{{{}}} \\item {}\n",
                 clue.number - 1,
-                escape_latex(&clue.text)
+                escape_latex(&clue.clue)
             ));
         }
         latex.push_str("\\end{enumerate}\n\n");
@@ -168,11 +156,11 @@ impl LatexGenerator {
         // Down clues
         latex.push_str("\\subsection*{Down}\n");
         latex.push_str("\\begin{enumerate}[itemsep=0.5em]\n");
-        for clue in &down {
+        for clue in down_clues {
             latex.push_str(&format!(
                 "\\setcounter{{enumi}}{{{}}} \\item {}\n",
                 clue.number - 1,
-                escape_latex(&clue.text)
+                escape_latex(&clue.clue)
             ));
         }
         latex.push_str("\\end{enumerate}\n");

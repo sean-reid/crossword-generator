@@ -27,14 +27,14 @@ pub fn solve_with_iterations(
     let mut encoder = CrosswordEncoder::new(size);
     let (num_vars, num_clauses) = encoder.encode(words, size, target_quality)?;
     
-    let encoding_time = start.elapsed().as_millis() as u32;
-    debug_log!("[SOLVER] Encoded in {}ms: {} vars, {} clauses", encoding_time, num_vars, num_clauses);
+    let _encoding_time = start.elapsed().as_millis() as u32;
+    debug_log!("[SOLVER] Encoded in {}ms: {} vars, {} clauses", _encoding_time, num_vars, num_clauses);
     
     // Estimate solve time based on actual observations
     // Real data: 333k vars = 28.4s solve
     // Use 0.085ms per var (matches observed data)
-    let estimated_solve_ms = ((num_vars as f32 * 0.085) as u32).max(3000);
-    debug_log!("[SOLVER] Estimated solve time: {}ms", estimated_solve_ms);
+    let _estimated_solve_ms = ((num_vars as f32 * 0.085) as u32).max(3000);
+    debug_log!("[SOLVER] Estimated solve time: {}ms", _estimated_solve_ms);
     
     let mut solver = Solver::new();
     solver.add_formula(encoder.get_formula());

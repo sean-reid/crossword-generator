@@ -1,223 +1,111 @@
-# Crossword Generator - Dual Target Edition
+# # Crossword Generator
 
-A crossword puzzle generator that can run both as a web application (WASM) and as a native CLI tool for generating LaTeX puzzle books.
+A crossword puzzle generator with both web (WASM) and CLI interfaces for generating LaTeX puzzle books.
+
+> **Note:** Package renamed from `crossword-wasm` to `crossword-core`. Build with `--features wasm` for web use.
+
+## Quick Start
+
+### Web Application
+```bash
+npm install
+npm run build:wasm    # Builds with --features wasm
+npm run dev
+```
+
+### CLI Tool
+```bash
+cargo build --release -p crossword-cli
+./target/release/crossword-cli -c 10 -o book.tex
+```
 
 ## Project Structure
-
-This is a Cargo workspace with two main crates:
 
 ```
 crossword-generator/
 ├── Cargo.toml              # Workspace root
-├── wasm/                   # Core library (can build as WASM or native)
-│   ├── Cargo.toml
-│   ├── Oxford_English_Dictionary.txt
+├── wasm/                   # Core library (WASM or native)
+│   ├── src/
+│   │   ├── lib.rs          # Conditional WASM bindings
+│   │   ├── dictionary.rs
+│   │   ├── encoder.rs
+│   │   ├── solver.rs
+│   │   └── solution.rs
+│   └── Oxford_English_Dictionary.txt
+├── cli/                    # Native CLI for LaTeX generation
 │   └── src/
-│       ├── lib.rs          # Conditional WASM bindings
-│       ├── dictionary.rs   # Dictionary parsing
-│       ├── encoder.rs      # SAT encoding
-│       ├── solver.rs       # SAT solving
-│       ├── solution.rs     # Data structures
-│       └── debug.rs        # Platform-specific debugging
-├── cli/                    # Native CLI for LaTeX book generation
-│   ├── Cargo.toml
-│   └── src/
-│       ├── main.rs         # CLI entry point
-│       ├── book.rs         # Book structure management
-│       └── latex.rs        # LaTeX generation
-├── src/                    # Frontend React application
-│   ├── App.tsx
-│   ├── components/
-│   └── types/
-├── package.json            # Frontend build config
-└── vite.config.ts          # Vite configuration
+│       ├── main.rs
+│       ├── book.rs
+│       └── latex.rs
+├── src/                    # React frontend
+└── package.json
 ```
 
 ## Features
 
-### Web Application (WASM)
-- Interactive crossword puzzle generation in the browser
-- Real-time visualization of generated puzzles
-- Adjustable grid sizes and difficulty
-
-### CLI Tool
-- Generate LaTeX documents containing multiple crossword puzzles
-- Configurable book generation (title, number of puzzles, grid size)
-- Optional automatic PDF compilation with pdflatex
-- Reproducible generation with optional random seeds
-- Progress indicators during generation
+- **Web App**: Interactive browser-based puzzle generation
+- **CLI Tool**: Generate LaTeX books with multiple puzzles
+- **SAT Solving**: Uses Boolean satisfiability for optimal word placement
+- **Oxford Dictionary**: 100k+ words with definitions
 
 ## Building
 
-### Prerequisites
+**Prerequisites**: Rust, Node.js, wasm-pack, optionally pdflatex for PDF generation
 
-**For Web Application:**
-- Node.js and npm
-- Rust and wasm-pack
-
-**For CLI Tool:**
-- Rust (stable toolchain)
-
-**For PDF Generation (CLI only):**
-- LaTeX distribution (texlive or mactex)
-
-### Build Commands
-
-#### Web Application
+### Web Application
 
 ```bash
-# Install dependencies
 npm install
-
-# Build WASM module
-npm run build:wasm
-
-# Build web application
+npm run build:wasm    # Important: builds with --features wasm
 npm run build:web
-
-# Or build everything
-npm run build
-
-# Development server
-npm run dev
+# Or: npm run build
+npm run dev          # Development server
 ```
 
-#### CLI Tool
+### CLI Tool
 
 ```bash
-# Build CLI binary
 cargo build --release -p crossword-cli
-
-# Or use npm script
-npm run build:cli
-
-# Binary will be at: target/release/crossword-cli
+# Binary at: target/release/crossword-cli
 ```
 
-## Usage
-
-### CLI Usage
-
-Generate a LaTeX crossword book:
+## CLI Usage
 
 ```bash
-# Basic usage - generate 10 puzzles
-./target/release/crossword-cli -c 10 -o my_book.tex
+# Basic - generate 10 puzzles
+./target/release/crossword-cli -c 10 -o book.tex
 
 # Custom configuration
 ./target/release/crossword-cli \
     --count 20 \
     --size 16 \
-    --title "My Awesome Crosswords" \
-    --output puzzles.tex
+    --title "My Puzzles" \
+    --output book.tex
 
-# Generate and compile to PDF immediately
-./target/release/crossword-cli \
-    -c 15 \
-    -o book.tex \
-    --compile
+# Generate and compile to PDF
+./target/release/crossword-cli -c 15 -o book.tex --compile
 
-# Reproducible generation with seed
-./target/release/crossword-cli \
-    -c 10 \
-    --seed 12345 \
-    -o reproducible.tex
+# Reproducible with seed
+./target/release/crossword-cli --seed 12345 -o book.tex
 ```
 
-#### CLI Options
+**Options:**
+- `-c, --count` - Number of puzzles (default: 10)
+- `-s, --size` - Grid size (default: 16)
+- `-o, --output` - Output file (default: crossword_book.tex)
+- `-t, --title` - Book title
+- `--seed` - Random seed for reproducibility
+- `--compile` - Auto-compile PDF with pdflatex
 
-- `-c, --count <NUM>` - Number of puzzles to generate (default: 10)
-- `-o, --output <PATH>` - Output LaTeX file path (default: crossword_book.tex)
-- `-s, --size <SIZE>` - Grid size NxN (default: 16)
-- `-t, --title <TITLE>` - Book title (default: "Crossword Puzzle Book")
-- `--seed <SEED>` - Random seed for reproducibility
-- `--compile` - Automatically compile PDF with pdflatex
+## How It Works
 
-### Manual LaTeX Compilation
+1. **Dictionary**: Parses Oxford English Dictionary (100k+ words)
+2. **SAT Encoding**: Converts crossword constraints to Boolean formulas
+3. **SAT Solving**: Uses Varisat solver to find valid word placements
+4. **Output**: Generates interactive web UI or LaTeX documents
 
-If you don't use the `--compile` flag, you can compile the LaTeX manually:
-
-```bash
-pdflatex crossword_book.tex
-pdflatex crossword_book.tex  # Run twice for proper references
-```
-
-## Architecture
-
-### Conditional Compilation
-
-The core crossword generation logic in the `wasm/` crate uses conditional compilation to work in both WASM and native contexts:
-
-- **WASM mode** (with `--features wasm`): 
-  - Includes wasm-bindgen bindings
-  - Uses web_time for timing
-  - Logs to browser console
-  
-- **Native mode** (default):
-  - No WASM dependencies
-  - Uses std::time for timing
-  - Logs to stderr
-
-### Code Sharing
-
-The following modules are shared between web and CLI:
-- `dictionary.rs` - Oxford English Dictionary parsing
-- `encoder.rs` - SAT constraint encoding
-- `solver.rs` - SAT solving with Varisat
-- `solution.rs` - Data structures for crossword puzzles
-
-The CLI adds:
-- `latex.rs` - LaTeX document generation
-- `book.rs` - Book structure and management
-
-## Development
-
-### Testing
-
-```bash
-# Test core library
-cd wasm
-cargo test
-
-# Test CLI
-cd cli
-cargo test
-```
-
-### Debugging
-
-Enable debug logging:
-
-```bash
-# WASM (web console)
-npm run build:wasm:debug
-
-# CLI (stderr)
-cargo build --release -p crossword-cli --features debug
-```
-
-## Technical Details
-
-### SAT Solving
-
-The crossword generator uses SAT (Boolean Satisfiability) solving to find valid word placements:
-
-1. **Encoding**: Convert the crossword constraints into Boolean formulas
-2. **Solving**: Use the Varisat SAT solver to find satisfying assignments
-3. **Extraction**: Convert the SAT solution back into word placements
-
-### LaTeX Output
-
-The CLI generates professional LaTeX documents with:
-- TikZ-based grid rendering
-- Properly numbered clues
-- Two-column clue layout
-- Automatic page breaks between puzzles
-
-### Word Selection
-
-The generator intelligently selects words from the Oxford English Dictionary:
-- Filters by suitable lengths (3 to grid size)
-- Balances word length distribution (70% short, 25% medium, 5% long)
-- Uses random sampling for variety
-- Adjusts word count based on grid size
+**Architecture:**
+- Core library (`wasm/`) compiles to both WASM (web) and native (CLI)
+- Conditional compilation via `--features wasm` flag
+- Shared logic: dictionary, encoder, solver, solution types
+- CLI adds: LaTeX generation, book managementdjusts word count based on grid size
