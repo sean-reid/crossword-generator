@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white text-gray-900;
+  }
+}
+
+@layer utilities {
+  .crossword-cell {
+    @apply aspect-square border border-gray-300 relative;
+  }
+  
+  .crossword-cell-black {
+    @apply bg-gray-900;
+  }
+
+  @media print {
+    .no-print {
+      @apply hidden;
+    }
+    
+    .crossword-cell,
+    .border {
+      @apply border-gray-900;
+    }
+    
+    .border-gray-300 {
+      @apply border-gray-900;
+    }
+  }
+}

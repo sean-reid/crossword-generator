@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+/wasm-pkg
+/dist
+src/wasm/target
+
+# Rust
+/target
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

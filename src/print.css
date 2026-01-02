@@ -1,0 +1,98 @@
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+  
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  
+  /* Clean page */
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  
+  /* Hide sidebar and controls */
+  .lg\:col-span-1,
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Full width content */
+  .lg\:col-span-3 {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .max-w-7xl,
+  .min-h-screen {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Stack vertically: grid on first page, clues on second */
+  .print-layout {
+    display: block !important;
+  }
+  
+  .space-y-8 {
+    gap: 0 !important;
+  }
+  
+  /* Grid page */
+  .crossword-container {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: page !important;
+    page-break-after: always !important;
+    padding: 0.5in !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 auto !important;
+    width: fit-content !important;
+  }
+  
+  /* Clues on new page */
+  .clues-container {
+    break-before: page !important;
+    page-break-before: always !important;
+    padding: 0.25in !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Readable clue sizes */
+  .clues-container h2 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.75rem !important;
+    font-weight: 700 !important;
+  }
+  
+  .clues-container h3 {
+    font-size: 1rem !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    font-weight: 600 !important;
+  }
+  
+  .clues-container > div > div > div {
+    font-size: 0.85rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.4rem !important;
+  }
+  
+  /* Remove web colors */
+  .bg-gray-50,
+  .bg-white {
+    background: white !important;
+  }
+  
+  .border-gray-200 {
+    border: none !important;
+  }
+}
