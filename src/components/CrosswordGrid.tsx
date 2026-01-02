@@ -31,7 +31,14 @@ export function CrosswordGrid({ grid, size, showAnswers = false }: CrosswordGrid
   }
   
 
-  const cellSize = Math.min(40, Math.floor(Math.min(600, typeof window !== 'undefined' ? window.innerWidth - 32 : 600) / size));
+  // Calculate cell size accounting for screen width and padding
+  // Mobile: 16px page padding + 8px container padding + 4px border = 28px per side = 56px total
+  // Desktop: more generous
+  const availableWidth = typeof window !== 'undefined' 
+    ? Math.min(600, window.innerWidth - 56)  // Account for padding and border
+    : 600;
+  
+  const cellSize = Math.min(40, Math.floor(availableWidth / size));
 
   return (
     <div className="flex justify-center overflow-x-auto">

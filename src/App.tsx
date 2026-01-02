@@ -175,7 +175,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="min-h-screen bg-gray-50 py-4 md:py-8 px-2 md:px-4">
         <div className="max-w-7xl mx-auto">
           <header className="text-center mb-6 md:mb-8 px-2">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
@@ -218,7 +218,7 @@ function App() {
                 <div className="print-layout">
                 {puzzle && (
                   <>
-                    <div className="bg-white crossword-container print:break-inside-avoid border border-gray-200 rounded-lg p-6">
+                    <div className="bg-white crossword-container print:break-inside-avoid border border-gray-200 rounded-lg p-2 md:p-6">
                       <CrosswordGrid 
                         grid={puzzle.grid} 
                         size={puzzle.grid.length}
