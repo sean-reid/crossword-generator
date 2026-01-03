@@ -94,7 +94,7 @@ cargo build --release -p crossword-cli
     --trim-size 6x9 \
     --kdp-format paperback \
     --generate-cover \
-    --paperback-cover-template cli/paperback-cover.svg \
+    --cover-template cli/paperback-cover.svg \
     -o kdp-book.tex
 
 # With word filtering for family-friendly content
@@ -149,8 +149,7 @@ cargo build --release -p crossword-cli
 
 **Cover Generation:**
 - `--generate-cover` - Generate KDP cover from template
-- `--paperback-cover-template` - Path to paperback cover SVG template
-- `--ebook-cover-template` - Path to ebook cover SVG template
+- `--cover-template` - Path to cover SVG template (type determined by --kdp-format)
 - `--color-interior` - Use color interior spine calculation (default: black & white)
 
 **Publishing Options:**
@@ -161,11 +160,6 @@ cargo build --release -p crossword-cli
 - `--isbn` - ISBN number
 - `--copyright` - Copyright year
 - `-d, --description` - Book description for title page
-
-**Graphics Options:**
-- `--cover-svg` - Path to cover SVG (e.g., `cover.svg`)
-- `--title-svg` - Path to title decoration SVG (e.g., `decoration.svg`)
-- **Note**: If no images provided, uses built-in TikZ decoration
 
 ## How It Works
 

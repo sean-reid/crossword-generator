@@ -58,14 +58,6 @@ struct Args {
     #[arg(short, long)]
     description: Option<String>,
 
-    /// Path to cover SVG file
-    #[arg(long)]
-    cover_svg: Option<PathBuf>,
-
-    /// Path to title page SVG/decoration file
-    #[arg(long)]
-    title_svg: Option<PathBuf>,
-
     /// Random seed for reproducibility
     #[arg(long)]
     seed: Option<u64>,
@@ -90,15 +82,11 @@ struct Args {
     #[arg(long, default_value = "6x9")]
     trim_size: String,
 
-    /// Path to paperback cover template SVG
+    /// Path to cover template SVG (uses kdp-format to determine type)
     #[arg(long)]
-    paperback_cover_template: Option<PathBuf>,
+    cover_template: Option<PathBuf>,
 
-    /// Path to ebook cover template SVG
-    #[arg(long)]
-    ebook_cover_template: Option<PathBuf>,
-
-    /// Generate cover file (requires template)
+    /// Generate cover file (requires cover-template)
     #[arg(long)]
     generate_cover: bool,
 
@@ -157,12 +145,6 @@ fn main() -> Result<()> {
     // Set trim size
     config.trim_size = book::TrimSize::from_string(&args.trim_size)?;
     
-    // Read SVG files if provided
-    config.cover_svg_path = args.cover_svg.as_ref()
-        .map(|p| p.to_string_lossy().to_string());
-    config.title_svg_path = args.title_svg.as_ref()
-        .map(|p| p.to_string_lossy().to_string());
-
     // Clone values we'll need later for cover generation
     let title_for_cover = config.title.clone();
     let author_for_cover = config.author.clone();
@@ -226,14 +208,9 @@ fn main() -> Result<()> {
     if args.generate_cover {
         println!("\nGenerating cover...");
         
-        let is_paperback = matches!(kdp_format_for_cover, book::KdpFormat::Paperback);
-        let template_path = if is_paperback {
-            args.paperback_cover_template.as_ref()
-        } else {
-            args.ebook_cover_template.as_ref()
-        };
-        
-        if let Some(template) = template_path {
+        if let Some(template) = args.cover_template.as_ref() {
+            let is_paperback = matches!(kdp_format_for_cover, book::KdpFormat::Paperback);
+            
             let cover_gen = CoverGenerator::new(
                 book.puzzle_count() + 6,  // Add front matter pages
                 trim_size_for_cover.width,
@@ -261,7 +238,7 @@ fn main() -> Result<()> {
             fs::write(&cover_path, cover_svg)?;
             println!("✅ Cover: {}", cover_path.display());
         } else {
-            eprintln!("⚠️  No cover template provided. Use --paperback-cover-template or --ebook-cover-template");
+            eprintln!("⚠️  No cover template provided. Use --cover-template");
         }
     }
 
