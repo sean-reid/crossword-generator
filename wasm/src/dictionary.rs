@@ -241,6 +241,17 @@ impl Dictionary {
             // Otherwise leave it (like "19th")
         }
         
+        // Second pass: check again for leading numbers after other cleanup
+        // This handles cases like "1 (usu. Predic.) not in good health"
+        def = def.trim().to_string();
+        if let Some(first_char) = def.chars().next() {
+            if first_char.is_ascii_digit() {
+                if let Some(space_pos) = def.find(' ') {
+                    def = def[space_pos + 1..].trim().to_string();
+                }
+            }
+        }
+        
         // Remove usage labels
         for label in &["colloq. ", "esp. ", "usu. "] {
             if def.to_lowercase().starts_with(label) {
