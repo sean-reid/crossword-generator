@@ -2,8 +2,6 @@
 
 A crossword puzzle generator with both web (WASM) and CLI interfaces for generating LaTeX puzzle books.
 
-> **Note:** Package renamed from `crossword-wasm` to `crossword-core`. Build with `--features wasm` for web use.
-
 ## Quick Start
 
 ### Web Application
