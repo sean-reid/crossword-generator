@@ -91,7 +91,7 @@ impl Dictionary {
                 let clue = Self::extract_clue(def);
                 let clean_clue = clue != "Definition not available" 
                     && !clue.to_lowercase().contains(&w.to_lowercase())
-                    && clue.len() > 10
+                    && clue.len() > 15
                     && !clue.to_lowercase().starts_with("of ")
                     && !clue.contains(") ")
                     && !clue.ends_with(")")
