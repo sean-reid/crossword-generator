@@ -79,7 +79,7 @@ impl Dictionary {
             .iter()
             .filter(|(w, def)| {
                 let len = w.len();
-                let valid_word = len >= 3 && len <= 15 && w.chars().all(|c| c.is_ascii_alphabetic());
+                let valid_word = len >= 3 && w.chars().all(|c| c.is_ascii_alphabetic());
                 
                 let def_lower = def.to_lowercase();
                 let not_special = !def_lower.starts_with("prefix")

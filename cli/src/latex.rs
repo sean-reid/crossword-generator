@@ -200,9 +200,11 @@ impl LatexGenerator {
             ));
         }
         
-        latex.push_str("\\vspace{0.5cm}\n\n");
+        latex.push_str("\\vspace{1cm}\n\n");
         
         latex.push_str("All rights reserved.\n\n");
+        
+        latex.push_str("\\vspace{0.5cm}\n\n");
         
         latex.push_str("\\begin{minipage}{0.8\\textwidth}\n");
         latex.push_str("\\centering\n");
