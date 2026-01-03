@@ -282,7 +282,9 @@ impl LatexGenerator {
         
         // LEFT PAGE - Clues (Across + Down)
         latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
-        latex.push_str(&format!("\\chapter*{{Puzzle {}}}\n", number));
+        
+        // Add section title without forcing page break
+        latex.push_str(&format!("{{\\Large\\bfseries Puzzle {}}}\\\\[1cm]\n\n", number));
         latex.push_str("\\addcontentsline{toc}{chapter}{Puzzle ");
         latex.push_str(&number.to_string());
         latex.push_str("}\n\n");
