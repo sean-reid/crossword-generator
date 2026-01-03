@@ -24,28 +24,8 @@ impl CoverGenerator {
         self.page_count as f32 * per_page
     }
 
-    /// Calculate full cover dimensions with bleed
-    /// KDP requires 0.125" bleed on all sides
-    pub fn calculate_cover_dimensions(&self, color: bool) -> CoverDimensions {
-        let spine_width = self.calculate_spine_width(color);
-        let bleed = 0.125;
-        
-        // Total width = bleed + back + spine + front + bleed
-        let width = bleed + self.trim_width + spine_width + self.trim_width + bleed;
-        // Total height = bleed + height + bleed
-        let height = bleed + self.trim_height + bleed;
-        
-        CoverDimensions {
-            total_width: width,
-            total_height: height,
-            spine_width,
-            back_cover_width: self.trim_width,
-            front_cover_width: self.trim_width,
-            bleed,
-        }
-    }
-
-    /// Generate paperback cover by modifying template SVG
+    /// Generate paperback cover - ONLY replaces text
+    /// User must design template at correct dimensions using KDP calculator
     pub fn generate_paperback_cover(
         &self,
         template_path: &str,
@@ -55,25 +35,27 @@ impl CoverGenerator {
         color: bool,
     ) -> Result<String> {
         let mut svg = fs::read_to_string(template_path)?;
-        let dims = self.calculate_cover_dimensions(color);
         
-        // Convert to pixels (assuming 96 DPI for SVG)
-        let px_spine = (dims.spine_width * 96.0) as u32;
+        // Calculate and print spine info for user reference
+        let spine_width_in = self.calculate_spine_width(color);
+        let spine_width_px = spine_width_in * 96.0;
         
-        // ONLY update spine width - leave everything else as-is
-        svg = svg.replace("width=\"40.5\"", &format!("width=\"{}\"", px_spine));
+        println!("\n📐 Spine Calculation:");
+        println!("   Page count: {}", self.page_count);
+        println!("   Spine width: {:.4}\" ({:.1} px at 96 DPI)", spine_width_in, spine_width_px);
+        println!("   Interior: {}", if color { "Color" } else { "Black & White" });
+        println!("\n   💡 Ensure your template is designed for this spine width");
+        println!("      Use: https://kdp.amazon.com/en_US/cover-templates");
         
-        // Replace title text
+        // ONLY replace text - preserve all design and dimensions
         svg = svg.replace("CROSSWORD", title);
         svg = svg.replace("PUZZLES", subtitle);
-        
-        // Replace author
         svg = svg.replace("BY SEAN REID", &format!("BY {}", author.to_uppercase()));
         
         Ok(svg)
     }
 
-    /// Generate ebook cover (simpler - no spine)
+    /// Generate ebook cover - ONLY replaces text
     pub fn generate_ebook_cover(
         &self,
         template_path: &str,
@@ -83,11 +65,9 @@ impl CoverGenerator {
     ) -> Result<String> {
         let mut svg = fs::read_to_string(template_path)?;
         
-        // Replace title text
+        // ONLY replace text
         svg = svg.replace("CROSSWORD", title);
         svg = svg.replace("PUZZLES", subtitle);
-        
-        // Replace author
         svg = svg.replace("BY SEAN REID", &format!("BY {}", author.to_uppercase()));
         
         Ok(svg)
