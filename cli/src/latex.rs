@@ -302,14 +302,17 @@ impl LatexGenerator {
     fn generate_puzzle_spread(&self, puzzle: &CrosswordPuzzle, number: usize) -> Result<String> {
         let mut latex = String::new();
         
-        // LEFT PAGE - Clues (top-aligned minipages)
+        // LEFT PAGE - Clues
         latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
         // Title
         latex.push_str(&format!("{{\\LARGE\\bfseries Puzzle {}}}\\\\[0.5cm]\n\n", number));
         
-        // Clues in minipages (won't overflow, but that's okay)
+        // Use small font to fit more clues (still readable, KDP compliant)
+        latex.push_str("{\\small\n");
+        
+        // Clues in top-aligned minipages
         latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Across}\n");
         latex.push_str("\\raggedright\n");
@@ -336,24 +339,23 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
-        latex.push_str("\\end{minipage}\n\n");
+        latex.push_str("\\end{minipage}\n");
+        
+        // Close small font
+        latex.push_str("}\n\n");
         
         // Clear to next page for grid
         latex.push_str("\\clearpage\n\n");
         
-        // RIGHT PAGE - Grid aligned with clue start height
+        // RIGHT PAGE - Grid
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
-        // Add same spacing as left page to align grid with clues
-        latex.push_str("\\vspace{0.5cm}\n\n");
-        
-        // Grid (no centering, just left-aligned or centered horizontally only)
+        // Center grid vertically
+        latex.push_str("\\vspace*{\\fill}\n");
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n\n");
-        
-        // Space below for overflow clues
-        latex.push_str("\\vspace{0.5cm}\n\n");
+        latex.push_str("\\end{center}\n");
+        latex.push_str("\\vspace*{\\fill}\n\n");
         
         // Clear to next puzzle
         latex.push_str("\\clearpage\n\n");
