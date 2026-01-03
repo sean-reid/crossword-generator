@@ -203,6 +203,7 @@ impl Dictionary {
                 || s.to_lowercase().starts_with("derog. ")
                 || s.to_lowercase().starts_with("joc. ")
                 || s.to_lowercase().starts_with("aux. ")
+                || s.to_lowercase().starts_with("int. ")
         };
         
         while style_pattern(&def) {
@@ -254,7 +255,7 @@ impl Dictionary {
         }
         
         // Remove usage labels
-        for label in &["colloq. ", "esp. ", "usu. ", "aux. "] {
+        for label in &["colloq. ", "esp. ", "usu. ", "aux. ", "int. "] {
             while def.to_lowercase().starts_with(label) {
                 def = def[label.len()..].to_string();
             }
