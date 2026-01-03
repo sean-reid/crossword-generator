@@ -238,39 +238,24 @@ impl LatexGenerator {
     fn generate_puzzle_spread(&self, puzzle: &CrosswordPuzzle, number: usize) -> Result<String> {
         let mut latex = String::new();
         
-        // LEFT PAGE - Puzzle grid (must be on even page number)
+        // LEFT PAGE - Grid + Across clues
         latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
         latex.push_str(&format!("\\chapter*{{Puzzle {}}}\n", number));
         latex.push_str("\\addcontentsline{toc}{chapter}{Puzzle ");
         latex.push_str(&number.to_string());
         latex.push_str("}\n\n");
         
-        // Center grid vertically on page
-        latex.push_str("\\vspace*{\\fill}\n");
+        // Grid
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n");
-        latex.push_str("\\vspace*{\\fill}\n");
+        latex.push_str("\\end{center}\n\n");
+        latex.push_str("\\vspace{0.5cm}\n\n");
         
-        // Force to next page (clues)
-        latex.push_str("\\clearpage\n\n");
-        
-        // RIGHT PAGE - Clues (will be on odd page number, facing the grid)
-        latex.push_str("\\thispagestyle{fancy}\n\n");
-        latex.push_str(&self.generate_clues_page(&puzzle.across_clues, &puzzle.down_clues));
-        
-        Ok(latex)
-    }
-
-    fn generate_clues_page(&self, across_clues: &[Clue], down_clues: &[Clue]) -> String {
-        let mut latex = String::new();
-        
-        // Top-aligned minipages for clues
-        latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
+        // Across clues on left page
         latex.push_str("\\subsection*{Across}\n");
         latex.push_str("\\raggedright\n");
         latex.push_str("\\begin{enumerate}\n");
-        for clue in across_clues {
+        for clue in &puzzle.across_clues {
             latex.push_str(&format!(
                 "\\setcounter{{enumi}}{{{}}} \\item {}\n",
                 clue.number - 1,
@@ -278,13 +263,24 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
-        latex.push_str("\\end{minipage}\n");
-        latex.push_str("\\hfill\n");
-        latex.push_str("\\begin{minipage}[t]{0.48\\textwidth}\n");
+        
+        // Force to next page (right page)
+        latex.push_str("\\clearpage\n\n");
+        
+        // RIGHT PAGE - Same grid + Down clues
+        latex.push_str("\\thispagestyle{fancy}\n\n");
+        
+        // Same grid repeated on right page
+        latex.push_str("\\begin{center}\n");
+        latex.push_str(&self.generate_grid(&puzzle.grid)?);
+        latex.push_str("\\end{center}\n\n");
+        latex.push_str("\\vspace{0.5cm}\n\n");
+        
+        // Down clues on right page
         latex.push_str("\\subsection*{Down}\n");
         latex.push_str("\\raggedright\n");
         latex.push_str("\\begin{enumerate}\n");
-        for clue in down_clues {
+        for clue in &puzzle.down_clues {
             latex.push_str(&format!(
                 "\\setcounter{{enumi}}{{{}}} \\item {}\n",
                 clue.number - 1,
@@ -292,9 +288,8 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
-        latex.push_str("\\end{minipage}\n");
         
-        latex
+        Ok(latex)
     }
 
     fn generate_grid(&self, grid: &[Vec<Option<char>>]) -> Result<String> {
