@@ -238,20 +238,28 @@ impl LatexGenerator {
     fn generate_puzzle_spread(&self, puzzle: &CrosswordPuzzle, number: usize) -> Result<String> {
         let mut latex = String::new();
         
-        // LEFT PAGE - Grid + Across clues
+        // LEFT PAGE - Grid only
         latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
         latex.push_str(&format!("\\chapter*{{Puzzle {}}}\n", number));
         latex.push_str("\\addcontentsline{toc}{chapter}{Puzzle ");
         latex.push_str(&number.to_string());
         latex.push_str("}\n\n");
         
-        // Grid
+        // Center grid vertically on page
+        latex.push_str("\\vspace*{\\fill}\n");
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n\n");
-        latex.push_str("\\vspace{0.5cm}\n\n");
+        latex.push_str("\\end{center}\n");
+        latex.push_str("\\vspace*{\\fill}\n");
         
-        // Across clues on left page
+        // Force to next page (clues)
+        latex.push_str("\\clearpage\n\n");
+        
+        // RIGHT PAGE - Both Across and Down clues
+        latex.push_str("\\thispagestyle{fancy}\n\n");
+        
+        // Top-aligned minipages for clues
+        latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Across}\n");
         latex.push_str("\\raggedright\n");
         latex.push_str("\\begin{enumerate}\n");
@@ -263,20 +271,9 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
-        
-        // Force to next page (right page)
-        latex.push_str("\\clearpage\n\n");
-        
-        // RIGHT PAGE - Same grid + Down clues
-        latex.push_str("\\thispagestyle{fancy}\n\n");
-        
-        // Same grid repeated on right page
-        latex.push_str("\\begin{center}\n");
-        latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n\n");
-        latex.push_str("\\vspace{0.5cm}\n\n");
-        
-        // Down clues on right page
+        latex.push_str("\\end{minipage}\n");
+        latex.push_str("\\hfill\n");
+        latex.push_str("\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Down}\n");
         latex.push_str("\\raggedright\n");
         latex.push_str("\\begin{enumerate}\n");
@@ -288,6 +285,7 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
+        latex.push_str("\\end{minipage}\n");
         
         Ok(latex)
     }
