@@ -17,6 +17,8 @@ Cargo.lock
 *.out
 *.toc
 *.synctex.gz
+*.tex
+*.pdf
 
 # IDE
 .vscode/
