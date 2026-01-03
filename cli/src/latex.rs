@@ -200,11 +200,11 @@ impl LatexGenerator {
             ));
         }
         
-        latex.push_str("\\vspace{1cm}\n\n");
+        latex.push_str("\\vspace{1.5cm}\n\n");
         
         latex.push_str("All rights reserved.\n\n");
         
-        latex.push_str("\\vspace{0.5cm}\n\n");
+        latex.push_str("\\vspace{0.8cm}\n\n");
         
         latex.push_str("\\begin{minipage}{0.8\\textwidth}\n");
         latex.push_str("\\centering\n");
@@ -366,13 +366,19 @@ impl LatexGenerator {
         let size = grid.len();
         let mut latex = String::new();
         
-        // Dynamic sizing based on grid dimensions
+        // Dynamic sizing based on grid dimensions - more aggressive for large grids
         let width_ratio = if size <= 10 {
+            0.70
+        } else if size <= 12 {
             0.75
-        } else if size <= 15 {
-            0.85
+        } else if size <= 14 {
+            0.78
+        } else if size <= 16 {
+            0.80
+        } else if size <= 18 {
+            0.75
         } else {
-            0.95
+            0.70
         };
         
         latex.push_str(&format!(
@@ -400,7 +406,9 @@ impl LatexGenerator {
             }
         }
         
-        // Draw cells
+        // Draw cells with thinner lines for larger grids
+        let stroke_width = if size > 14 { "0.5" } else { "1" };
+        
         for row in 0..size {
             for col in 0..size {
                 let x = col;
@@ -408,14 +416,16 @@ impl LatexGenerator {
                 
                 if grid[row][col].is_some() {
                     latex.push_str(&format!(
-                        "\\draw ({},{}) rectangle ({},{});\n",
-                        x, y, x + 1, y + 1
+                        "\\draw[line width={}pt] ({},{}) rectangle ({},{});\n",
+                        stroke_width, x, y, x + 1, y + 1
                     ));
                     
                     if let Some(num) = numbers[row][col] {
+                        // Smaller numbers for larger grids
+                        let font_size = if size > 14 { "\\tiny" } else { "\\scriptsize" };
                         latex.push_str(&format!(
-                            "\\node[anchor=north west,font=\\scriptsize,inner sep=0.02] at ({},{}) {{{}}};\n",
-                            x as f32 + 0.05, y as f32 + 0.95, num
+                            "\\node[anchor=north west,font={},inner sep=0.02] at ({},{}) {{{}}};\n",
+                            font_size, x as f32 + 0.05, y as f32 + 0.95, num
                         ));
                     }
                 } else {
