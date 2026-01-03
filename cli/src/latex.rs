@@ -341,15 +341,19 @@ impl LatexGenerator {
         // Clear to next page for grid
         latex.push_str("\\clearpage\n\n");
         
-        // RIGHT PAGE - Grid only
+        // RIGHT PAGE - Grid aligned with clue start height
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
-        // Center grid
-        latex.push_str("\\vspace*{\\fill}\n");
+        // Add same spacing as left page to align grid with clues
+        latex.push_str("\\vspace{0.5cm}\n\n");
+        
+        // Grid (no centering, just left-aligned or centered horizontally only)
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n");
-        latex.push_str("\\vspace*{\\fill}\n\n");
+        latex.push_str("\\end{center}\n\n");
+        
+        // Space below for overflow clues
+        latex.push_str("\\vspace{0.5cm}\n\n");
         
         // Clear to next puzzle
         latex.push_str("\\clearpage\n\n");
