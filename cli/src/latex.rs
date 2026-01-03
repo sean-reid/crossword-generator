@@ -309,10 +309,7 @@ impl LatexGenerator {
         // Title
         latex.push_str(&format!("{{\\LARGE\\bfseries Puzzle {}}}\\\\[0.5cm]\n\n", number));
         
-        // Use small font to fit more clues (still readable, KDP compliant)
-        latex.push_str("{\\small\n");
-        
-        // Clues in top-aligned minipages
+        // Clues in top-aligned minipages (normal font size with more page space)
         latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Across}\n");
         latex.push_str("\\raggedright\n");
@@ -339,23 +336,22 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
-        latex.push_str("\\end{minipage}\n");
-        
-        // Close small font
-        latex.push_str("}\n\n");
+        latex.push_str("\\end{minipage}\n\n");
         
         // Clear to next page for grid
         latex.push_str("\\clearpage\n\n");
         
-        // RIGHT PAGE - Grid
+        // RIGHT PAGE - Grid aligned with clue headers
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
-        // Center grid vertically
-        latex.push_str("\\vspace*{\\fill}\n");
+        // Match the spacing from left page: title + 0.5cm space
+        // The subsection* adds some space, so we approximate that here
+        latex.push_str("\\vspace*{0.5cm}\n\n");
+        
+        // Grid (not vertically centered, aligned with clue start)
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n");
-        latex.push_str("\\vspace*{\\fill}\n\n");
+        latex.push_str("\\end{center}\n\n");
         
         // Clear to next puzzle
         latex.push_str("\\clearpage\n\n");

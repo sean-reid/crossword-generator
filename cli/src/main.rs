@@ -82,8 +82,8 @@ struct Args {
     #[arg(long, default_value = "paperback")]
     kdp_format: String,
 
-    /// Trim size for paperback (default: 6x9, options: 5x8, 5.5x8.5, 6x9, 7x10, 8x10)
-    #[arg(long, default_value = "6x9")]
+    /// Trim size for paperback (default: 8x10, options: 5x8, 5.5x8.5, 6x9, 7x10, 8x10)
+    #[arg(long, default_value = "8x10")]
     trim_size: String,
 
     /// Path to cover template SVG (uses kdp-format to determine type)

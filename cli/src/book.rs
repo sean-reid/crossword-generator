@@ -56,7 +56,7 @@ impl BookConfig {
             grid_size,
             puzzles_per_page: 1,
             kdp_format: KdpFormat::Paperback,
-            trim_size: TrimSize { width: 6.0, height: 9.0 },
+            trim_size: TrimSize { width: 8.0, height: 10.0 },
         }
     }
 }
