@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="3831" height="2775" viewBox="0 0 3831 2775" xmlns="http://www.w3.org/2000/svg">
+<svg width="5031" height="3075" viewBox="0 0 5031 3075" xmlns="http://www.w3.org/2000/svg">
   
   <!-- White background -->
-  <rect width="3831" height="2775" fill="#ffffff"/>
+  <rect width="5031" height="3075" fill="#ffffff"/>
   
   <!-- BACK COVER -->
   <g id="back_cover">
@@ -13,10 +13,10 @@
         <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
       </linearGradient>
     </defs>
-    <rect x="0" y="0" width="1837.5" height="2775" fill="url(#backGrad)"/>
+    <rect x="0" y="0" width="2437.5" height="3075" fill="url(#backGrad)"/>
     
     <!-- Decorative crossword mini-grid (centered) -->
-    <g transform="translate(768.75, 1087.5)">
+    <g transform="translate(1068.75, 1237.5)">
       <rect x="0" y="0" width="300" height="300" fill="none" stroke="#34495e" stroke-width="3"/>
       <line x1="75" y1="0" x2="75" y2="300" stroke="#34495e" stroke-width="1"/>
       <line x1="150" y1="0" x2="150" y2="300" stroke="#34495e" stroke-width="1"/>
@@ -29,23 +29,23 @@
     </g>
     
     <!-- Description text -->
-    <text x="918.75" y="1750" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" fill="#2c3e50">
+    <text x="1218.75" y="1900" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" fill="#2c3e50">
       Challenge your mind with these
     </text>
-    <text x="918.75" y="1800" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" fill="#2c3e50">
+    <text x="1218.75" y="1955" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" fill="#2c3e50">
       expertly crafted puzzles
     </text>
   </g>
   
   <!-- SPINE -->
   <g id="spine">
-    <rect x="1837.5" y="0" width="156.1" height="2775" fill="#34495e"/>
+    <rect x="2437.5" y="0" width="156.1" height="3075" fill="#34495e"/>
     
     <!-- Spine text (rotated 90 degrees, reading from bottom to top) -->
-    <text x="1915.55" y="1850" text-anchor="middle" font-family="Georgia, serif" font-size="38" font-weight="bold" fill="#ffffff" letter-spacing="3" transform="rotate(-90 1915.55 1850)">
+    <text x="2515.55" y="2050" text-anchor="middle" font-family="Georgia, serif" font-size="38" font-weight="bold" fill="#ffffff" letter-spacing="3" transform="rotate(-90 2515.55 2050)">
       CROSSWORD PUZZLES
     </text>
-    <text x="1915.55" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#ecf0f1" letter-spacing="2" transform="rotate(-90 1915.55 650)">
+    <text x="2515.55" y="750" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#ecf0f1" letter-spacing="2" transform="rotate(-90 2515.55 750)">
       SEAN REID
     </text>
   </g>
@@ -63,199 +63,199 @@
         <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#4a5f7f" stroke-width="0.5" opacity="0.3"/>
       </pattern>
     </defs>
-    <rect x="1993.6" y="0" width="1837.4" height="2775" fill="url(#frontGrad)"/>
-    <rect x="1993.6" y="0" width="1837.4" height="2775" fill="url(#gridPattern)" opacity="0.5"/>
+    <rect x="2593.6" y="0" width="2437.4" height="3075" fill="url(#frontGrad)"/>
+    <rect x="2593.6" y="0" width="2437.4" height="3075" fill="url(#gridPattern)" opacity="0.5"/>
     
     <!-- Large 16x16 crossword grid -->
-    <g id="crossword_main" transform="translate(2193.6, 550)">
-      <!-- 16x16 grid fitting in 1440px = 90px per cell -->
+    <g id="crossword_main" transform="translate(2893.6, 650)">
+      <!-- 16x16 grid fitting in 1640px = 102.5px per cell -->
       <g id="grid">
         <!-- Main grid outline -->
-        <rect x="0" y="0" width="1440" height="1440" fill="#ffffff" stroke="#2c3e50" stroke-width="5"/>
+        <rect x="0" y="0" width="1640" height="1640" fill="#ffffff" stroke="#2c3e50" stroke-width="5"/>
         
         <!-- Grid lines -->
         <g stroke="#2c3e50" stroke-width="2">
           <!-- Vertical lines -->
-          <line x1="90" y1="0" x2="90" y2="1440"/>
-          <line x1="180" y1="0" x2="180" y2="1440"/>
-          <line x1="270" y1="0" x2="270" y2="1440"/>
-          <line x1="360" y1="0" x2="360" y2="1440"/>
-          <line x1="450" y1="0" x2="450" y2="1440"/>
-          <line x1="540" y1="0" x2="540" y2="1440"/>
-          <line x1="630" y1="0" x2="630" y2="1440"/>
-          <line x1="720" y1="0" x2="720" y2="1440"/>
-          <line x1="810" y1="0" x2="810" y2="1440"/>
-          <line x1="900" y1="0" x2="900" y2="1440"/>
-          <line x1="990" y1="0" x2="990" y2="1440"/>
-          <line x1="1080" y1="0" x2="1080" y2="1440"/>
-          <line x1="1170" y1="0" x2="1170" y2="1440"/>
-          <line x1="1260" y1="0" x2="1260" y2="1440"/>
-          <line x1="1350" y1="0" x2="1350" y2="1440"/>
+          <line x1="102.5" y1="0" x2="102.5" y2="1640"/>
+          <line x1="205" y1="0" x2="205" y2="1640"/>
+          <line x1="307.5" y1="0" x2="307.5" y2="1640"/>
+          <line x1="410" y1="0" x2="410" y2="1640"/>
+          <line x1="512.5" y1="0" x2="512.5" y2="1640"/>
+          <line x1="615" y1="0" x2="615" y2="1640"/>
+          <line x1="717.5" y1="0" x2="717.5" y2="1640"/>
+          <line x1="820" y1="0" x2="820" y2="1640"/>
+          <line x1="922.5" y1="0" x2="922.5" y2="1640"/>
+          <line x1="1025" y1="0" x2="1025" y2="1640"/>
+          <line x1="1127.5" y1="0" x2="1127.5" y2="1640"/>
+          <line x1="1230" y1="0" x2="1230" y2="1640"/>
+          <line x1="1332.5" y1="0" x2="1332.5" y2="1640"/>
+          <line x1="1435" y1="0" x2="1435" y2="1640"/>
+          <line x1="1537.5" y1="0" x2="1537.5" y2="1640"/>
           
           <!-- Horizontal lines -->
-          <line x1="0" y1="90" x2="1440" y2="90"/>
-          <line x1="0" y1="180" x2="1440" y2="180"/>
-          <line x1="0" y1="270" x2="1440" y2="270"/>
-          <line x1="0" y1="360" x2="1440" y2="360"/>
-          <line x1="0" y1="450" x2="1440" y2="450"/>
-          <line x1="0" y1="540" x2="1440" y2="540"/>
-          <line x1="0" y1="630" x2="1440" y2="630"/>
-          <line x1="0" y1="720" x2="1440" y2="720"/>
-          <line x1="0" y1="810" x2="1440" y2="810"/>
-          <line x1="0" y1="900" x2="1440" y2="900"/>
-          <line x1="0" y1="990" x2="1440" y2="990"/>
-          <line x1="0" y1="1080" x2="1440" y2="1080"/>
-          <line x1="0" y1="1170" x2="1440" y2="1170"/>
-          <line x1="0" y1="1260" x2="1440" y2="1260"/>
-          <line x1="0" y1="1350" x2="1440" y2="1350"/>
+          <line x1="0" y1="102.5" x2="1640" y2="102.5"/>
+          <line x1="0" y1="205" x2="1640" y2="205"/>
+          <line x1="0" y1="307.5" x2="1640" y2="307.5"/>
+          <line x1="0" y1="410" x2="1640" y2="410"/>
+          <line x1="0" y1="512.5" x2="1640" y2="512.5"/>
+          <line x1="0" y1="615" x2="1640" y2="615"/>
+          <line x1="0" y1="717.5" x2="1640" y2="717.5"/>
+          <line x1="0" y1="820" x2="1640" y2="820"/>
+          <line x1="0" y1="922.5" x2="1640" y2="922.5"/>
+          <line x1="0" y1="1025" x2="1640" y2="1025"/>
+          <line x1="0" y1="1127.5" x2="1640" y2="1127.5"/>
+          <line x1="0" y1="1230" x2="1640" y2="1230"/>
+          <line x1="0" y1="1332.5" x2="1640" y2="1332.5"/>
+          <line x1="0" y1="1435" x2="1640" y2="1435"/>
+          <line x1="0" y1="1537.5" x2="1640" y2="1537.5"/>
         </g>
         
         <!-- Black squares -->
         <g fill="#2c3e50">
-          <rect x="270" y="0" width="90" height="90"/>
-          <rect x="990" y="0" width="90" height="90"/>
-          <rect x="270" y="90" width="90" height="90"/>
-          <rect x="630" y="90" width="90" height="90"/>
-          <rect x="990" y="90" width="90" height="90"/>
-          <rect x="270" y="180" width="90" height="90"/>
-          <rect x="630" y="180" width="90" height="90"/>
-          <rect x="990" y="180" width="90" height="90"/>
-          <rect x="0" y="270" width="90" height="90"/>
-          <rect x="90" y="270" width="90" height="90"/>
-          <rect x="180" y="270" width="90" height="90"/>
-          <rect x="630" y="270" width="90" height="90"/>
-          <rect x="1260" y="270" width="90" height="90"/>
-          <rect x="1350" y="270" width="90" height="90"/>
-          <rect x="450" y="360" width="90" height="90"/>
-          <rect x="990" y="360" width="90" height="90"/>
-          <rect x="450" y="450" width="90" height="90"/>
-          <rect x="810" y="450" width="90" height="90"/>
-          <rect x="360" y="540" width="90" height="90"/>
-          <rect x="900" y="540" width="90" height="90"/>
-          <rect x="1260" y="540" width="90" height="90"/>
-          <rect x="270" y="630" width="90" height="90"/>
-          <rect x="1170" y="630" width="90" height="90"/>
-          <rect x="180" y="720" width="90" height="90"/>
-          <rect x="1080" y="720" width="90" height="90"/>
-          <rect x="90" y="810" width="90" height="90"/>
-          <rect x="450" y="810" width="90" height="90"/>
-          <rect x="990" y="810" width="90" height="90"/>
-          <rect x="540" y="900" width="90" height="90"/>
-          <rect x="900" y="900" width="90" height="90"/>
-          <rect x="360" y="990" width="90" height="90"/>
-          <rect x="900" y="990" width="90" height="90"/>
-          <rect x="0" y="1080" width="90" height="90"/>
-          <rect x="90" y="1080" width="90" height="90"/>
-          <rect x="720" y="1080" width="90" height="90"/>
-          <rect x="1170" y="1080" width="90" height="90"/>
-          <rect x="1260" y="1080" width="90" height="90"/>
-          <rect x="1350" y="1080" width="90" height="90"/>
-          <rect x="360" y="1170" width="90" height="90"/>
-          <rect x="720" y="1170" width="90" height="90"/>
-          <rect x="1080" y="1170" width="90" height="90"/>
-          <rect x="360" y="1260" width="90" height="90"/>
-          <rect x="720" y="1260" width="90" height="90"/>
-          <rect x="1080" y="1260" width="90" height="90"/>
-          <rect x="360" y="1350" width="90" height="90"/>
-          <rect x="1080" y="1350" width="90" height="90"/>
+          <rect x="307.5" y="0" width="102.5" height="102.5"/>
+          <rect x="1127.5" y="0" width="102.5" height="102.5"/>
+          <rect x="307.5" y="102.5" width="102.5" height="102.5"/>
+          <rect x="717.5" y="102.5" width="102.5" height="102.5"/>
+          <rect x="1127.5" y="102.5" width="102.5" height="102.5"/>
+          <rect x="307.5" y="205" width="102.5" height="102.5"/>
+          <rect x="717.5" y="205" width="102.5" height="102.5"/>
+          <rect x="1127.5" y="205" width="102.5" height="102.5"/>
+          <rect x="0" y="307.5" width="102.5" height="102.5"/>
+          <rect x="102.5" y="307.5" width="102.5" height="102.5"/>
+          <rect x="205" y="307.5" width="102.5" height="102.5"/>
+          <rect x="717.5" y="307.5" width="102.5" height="102.5"/>
+          <rect x="1435" y="307.5" width="102.5" height="102.5"/>
+          <rect x="1537.5" y="307.5" width="102.5" height="102.5"/>
+          <rect x="512.5" y="410" width="102.5" height="102.5"/>
+          <rect x="1127.5" y="410" width="102.5" height="102.5"/>
+          <rect x="512.5" y="512.5" width="102.5" height="102.5"/>
+          <rect x="922.5" y="512.5" width="102.5" height="102.5"/>
+          <rect x="410" y="615" width="102.5" height="102.5"/>
+          <rect x="1025" y="615" width="102.5" height="102.5"/>
+          <rect x="1435" y="615" width="102.5" height="102.5"/>
+          <rect x="307.5" y="717.5" width="102.5" height="102.5"/>
+          <rect x="1332.5" y="717.5" width="102.5" height="102.5"/>
+          <rect x="205" y="820" width="102.5" height="102.5"/>
+          <rect x="1230" y="820" width="102.5" height="102.5"/>
+          <rect x="102.5" y="922.5" width="102.5" height="102.5"/>
+          <rect x="512.5" y="922.5" width="102.5" height="102.5"/>
+          <rect x="1127.5" y="922.5" width="102.5" height="102.5"/>
+          <rect x="615" y="1025" width="102.5" height="102.5"/>
+          <rect x="1025" y="1025" width="102.5" height="102.5"/>
+          <rect x="410" y="1127.5" width="102.5" height="102.5"/>
+          <rect x="1025" y="1127.5" width="102.5" height="102.5"/>
+          <rect x="0" y="1230" width="102.5" height="102.5"/>
+          <rect x="102.5" y="1230" width="102.5" height="102.5"/>
+          <rect x="820" y="1230" width="102.5" height="102.5"/>
+          <rect x="1332.5" y="1230" width="102.5" height="102.5"/>
+          <rect x="1435" y="1230" width="102.5" height="102.5"/>
+          <rect x="1537.5" y="1230" width="102.5" height="102.5"/>
+          <rect x="410" y="1332.5" width="102.5" height="102.5"/>
+          <rect x="820" y="1332.5" width="102.5" height="102.5"/>
+          <rect x="1230" y="1332.5" width="102.5" height="102.5"/>
+          <rect x="410" y="1435" width="102.5" height="102.5"/>
+          <rect x="820" y="1435" width="102.5" height="102.5"/>
+          <rect x="1230" y="1435" width="102.5" height="102.5"/>
+          <rect x="410" y="1537.5" width="102.5" height="102.5"/>
+          <rect x="1230" y="1537.5" width="102.5" height="102.5"/>
         </g>
         
         <!-- Numbers -->
-        <g font-family="Arial, sans-serif" font-size="26" fill="#2c3e50" font-weight="bold">
-          <text x="6" y="26">1</text>
-          <text x="96" y="26">2</text>
-          <text x="186" y="26">3</text>
-          <text x="366" y="26">4</text>
-          <text x="456" y="26">5</text>
-          <text x="546" y="26">6</text>
-          <text x="726" y="26">7</text>
-          <text x="816" y="26">8</text>
-          <text x="906" y="26">9</text>
-          <text x="1086" y="26">10</text>
-          <text x="1176" y="26">11</text>
-          <text x="1266" y="26">12</text>
-          <text x="1356" y="26">13</text>
-          <text x="6" y="116">14</text>
-          <text x="366" y="116">15</text>
-          <text x="726" y="116">16</text>
-          <text x="1086" y="116">17</text>
-          <text x="6" y="206">18</text>
-          <text x="366" y="206">19</text>
-          <text x="726" y="206">20</text>
-          <text x="1086" y="206">21</text>
-          <text x="276" y="296">22</text>
-          <text x="726" y="296">23</text>
-          <text x="6" y="386">24</text>
-          <text x="96" y="386">25</text>
-          <text x="186" y="386">26</text>
-          <text x="546" y="386">27</text>
-          <text x="636" y="386">28</text>
-          <text x="1086" y="386">29</text>
-          <text x="1266" y="386">30</text>
-          <text x="1356" y="386">31</text>
-          <text x="6" y="476">32</text>
-          <text x="546" y="476">33</text>
-          <text x="906" y="476">34</text>
-          <text x="996" y="476">35</text>
-          <text x="6" y="566">36</text>
-          <text x="456" y="566">37</text>
-          <text x="816" y="566">38</text>
-          <text x="996" y="566">39</text>
-          <text x="6" y="656">40</text>
-          <text x="366" y="656">41</text>
-          <text x="906" y="656">42</text>
-          <text x="1266" y="656">43</text>
-          <text x="6" y="746">44</text>
-          <text x="276" y="746">45</text>
-          <text x="1176" y="746">46</text>
-          <text x="186" y="836">47</text>
-          <text x="546" y="836">48</text>
-          <text x="1086" y="836">49</text>
-          <text x="6" y="926">50</text>
-          <text x="96" y="926">51</text>
-          <text x="456" y="926">52</text>
-          <text x="636" y="926">53</text>
-          <text x="996" y="926">54</text>
-          <text x="6" y="1016">55</text>
-          <text x="456" y="1016">56</text>
-          <text x="546" y="1016">57</text>
-          <text x="996" y="1016">58</text>
-          <text x="186" y="1106">59</text>
-          <text x="816" y="1106">60</text>
-          <text x="906" y="1106">61</text>
-          <text x="6" y="1196">62</text>
-          <text x="96" y="1196">63</text>
-          <text x="456" y="1196">64</text>
-          <text x="816" y="1196">65</text>
-          <text x="1176" y="1196">66</text>
-          <text x="1266" y="1196">67</text>
-          <text x="1356" y="1196">68</text>
-          <text x="6" y="1286">69</text>
-          <text x="456" y="1286">70</text>
-          <text x="816" y="1286">71</text>
-          <text x="1176" y="1286">72</text>
-          <text x="6" y="1376">73</text>
-          <text x="456" y="1376">74</text>
-          <text x="1176" y="1376">75</text>
+        <g font-family="Arial, sans-serif" font-size="30" fill="#2c3e50" font-weight="bold">
+          <text x="7" y="30">1</text>
+          <text x="109.5" y="30">2</text>
+          <text x="212" y="30">3</text>
+          <text x="417" y="30">4</text>
+          <text x="519.5" y="30">5</text>
+          <text x="622" y="30">6</text>
+          <text x="827" y="30">7</text>
+          <text x="929.5" y="30">8</text>
+          <text x="1032" y="30">9</text>
+          <text x="1237" y="30">10</text>
+          <text x="1339.5" y="30">11</text>
+          <text x="1442" y="30">12</text>
+          <text x="1544.5" y="30">13</text>
+          <text x="7" y="132.5">14</text>
+          <text x="417" y="132.5">15</text>
+          <text x="827" y="132.5">16</text>
+          <text x="1237" y="132.5">17</text>
+          <text x="7" y="235">18</text>
+          <text x="417" y="235">19</text>
+          <text x="827" y="235">20</text>
+          <text x="1237" y="235">21</text>
+          <text x="314.5" y="337.5">22</text>
+          <text x="827" y="337.5">23</text>
+          <text x="7" y="440">24</text>
+          <text x="109.5" y="440">25</text>
+          <text x="212" y="440">26</text>
+          <text x="622" y="440">27</text>
+          <text x="724.5" y="440">28</text>
+          <text x="1237" y="440">29</text>
+          <text x="1442" y="440">30</text>
+          <text x="1544.5" y="440">31</text>
+          <text x="7" y="542.5">32</text>
+          <text x="622" y="542.5">33</text>
+          <text x="1032" y="542.5">34</text>
+          <text x="1134.5" y="542.5">35</text>
+          <text x="7" y="645">36</text>
+          <text x="519.5" y="645">37</text>
+          <text x="929.5" y="645">38</text>
+          <text x="1134.5" y="645">39</text>
+          <text x="7" y="747.5">40</text>
+          <text x="417" y="747.5">41</text>
+          <text x="1032" y="747.5">42</text>
+          <text x="1442" y="747.5">43</text>
+          <text x="7" y="850">44</text>
+          <text x="314.5" y="850">45</text>
+          <text x="1339.5" y="850">46</text>
+          <text x="212" y="952.5">47</text>
+          <text x="622" y="952.5">48</text>
+          <text x="1237" y="952.5">49</text>
+          <text x="7" y="1055">50</text>
+          <text x="109.5" y="1055">51</text>
+          <text x="519.5" y="1055">52</text>
+          <text x="724.5" y="1055">53</text>
+          <text x="1134.5" y="1055">54</text>
+          <text x="7" y="1157.5">55</text>
+          <text x="519.5" y="1157.5">56</text>
+          <text x="622" y="1157.5">57</text>
+          <text x="1134.5" y="1157.5">58</text>
+          <text x="212" y="1260">59</text>
+          <text x="929.5" y="1260">60</text>
+          <text x="1032" y="1260">61</text>
+          <text x="7" y="1362.5">62</text>
+          <text x="109.5" y="1362.5">63</text>
+          <text x="519.5" y="1362.5">64</text>
+          <text x="929.5" y="1362.5">65</text>
+          <text x="1339.5" y="1362.5">66</text>
+          <text x="1442" y="1362.5">67</text>
+          <text x="1544.5" y="1362.5">68</text>
+          <text x="7" y="1465">69</text>
+          <text x="519.5" y="1465">70</text>
+          <text x="929.5" y="1465">71</text>
+          <text x="1339.5" y="1465">72</text>
+          <text x="7" y="1567.5">73</text>
+          <text x="519.5" y="1567.5">74</text>
+          <text x="1339.5" y="1567.5">75</text>
         </g>
       </g>
     </g>
     
     <!-- Title area -->
-    <text id="title_text" x="2912.8" y="270" text-anchor="middle" font-family="Georgia, serif" font-size="95" font-weight="bold" fill="#ffffff" letter-spacing="4">
+    <text id="title_text" x="3812.8" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="108" font-weight="bold" fill="#ffffff" letter-spacing="4">
       CROSSWORD
     </text>
-    <text id="subtitle_text" x="2912.8" y="370" text-anchor="middle" font-family="Georgia, serif" font-size="58" fill="#ecf0f1">
+    <text id="subtitle_text" x="3812.8" y="420" text-anchor="middle" font-family="Georgia, serif" font-size="66" fill="#ecf0f1">
       PUZZLES
     </text>
     
     <!-- Author area -->
-    <text id="author_text" x="2912.8" y="2320" text-anchor="middle" font-family="Arial, sans-serif" font-size="44" fill="#ecf0f1" letter-spacing="2">
+    <text id="author_text" x="3812.8" y="2620" text-anchor="middle" font-family="Arial, sans-serif" font-size="50" fill="#ecf0f1" letter-spacing="2">
       BY SEAN REID
     </text>
     
     <!-- Decorative lines -->
-    <line x1="2193.6" y1="450" x2="3633.6" y2="450" stroke="#ecf0f1" stroke-width="2.5" opacity="0.6"/>
-    <line x1="2193.6" y1="2150" x2="3633.6" y2="2150" stroke="#ecf0f1" stroke-width="2.5" opacity="0.6"/>
+    <line x1="2893.6" y1="520" x2="4733.6" y2="520" stroke="#ecf0f1" stroke-width="3" opacity="0.6"/>
+    <line x1="2893.6" y1="2460" x2="4733.6" y2="2460" stroke="#ecf0f1" stroke-width="3" opacity="0.6"/>
   </g>
 </svg>
