@@ -143,7 +143,7 @@ cargo build --release -p crossword-cli
 - `-j, --jobs` - Parallel threads (default: CPU cores)
 - `--seed` - Random seed for reproducibility
 - `--compile` - Auto-compile PDF with pdflatex
-- `--allowlist` - Path to word allowlist file (one word per line, filters dictionary)
+- `--allowlist` - Path to word allowlist file (default: uses wasm/clean_allowlist.txt)
 - `--kdp-format` - paperback or ebook (default: paperback)
 - `--trim-size` - Paperback size: 5x8, 5.5x8.5, 6x9, 7x10, 8x10 (default: 6x9)
 

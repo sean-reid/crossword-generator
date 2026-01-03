@@ -124,13 +124,16 @@ fn main() -> Result<()> {
     let dict = if let Some(ref allowlist_path) = args.allowlist {
         let allowlist_text = fs::read_to_string(allowlist_path)
             .context("Failed to read allowlist file")?;
-        println!("Using allowlist: {}", allowlist_path.display());
+        println!("Using custom allowlist: {}", allowlist_path.display());
         Dictionary::with_allowlist(Some(&allowlist_text))
     } else {
-        Dictionary::new()
+        // Use default embedded allowlist
+        let default_allowlist = include_str!("../../wasm/clean_allowlist.txt");
+        println!("Using default allowlist");
+        Dictionary::with_allowlist(Some(default_allowlist))
     };
     let stats = dict.stats();
-    println!("Dictionary loaded: {} words", stats.word_count);
+    println!("Dictionary loaded: {} words (filtered)", stats.word_count);
 
     let mut config = BookConfig::new(args.title.clone(), args.size);
     config.subtitle = args.subtitle.clone();
