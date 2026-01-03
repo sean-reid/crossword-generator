@@ -1,25 +1,6 @@
 use crossword_core::{CrosswordPuzzle, Clue};
-use crate::book::CrosswordBook;
+use crate::book::{CrosswordBook, KdpFormat};
 use anyhow::Result;
-use std::fs;
-
-// Default ornamental decoration SVG embedded in code
-const DEFAULT_DECORATION_SVG: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
-<svg width="300" height="60" viewBox="0 0 300 60" xmlns="http://www.w3.org/2000/svg">
-  <g stroke="black" stroke-width="1.5" fill="none">
-    <path d="M 10,30 Q 30,10 50,30 Q 70,50 90,30" stroke-linecap="round"/>
-    <rect x="115" y="15" width="15" height="15" fill="black"/>
-    <rect x="135" y="15" width="15" height="15"/>
-    <rect x="155" y="15" width="15" height="15" fill="black"/>
-    <rect x="115" y="30" width="15" height="15"/>
-    <rect x="135" y="30" width="15" height="15" fill="black"/>
-    <rect x="155" y="30" width="15" height="15"/>
-    <rect x="115" y="45" width="15" height="15" fill="black"/>
-    <rect x="135" y="45" width="15" height="15"/>
-    <rect x="155" y="45" width="15" height="15" fill="black"/>
-    <path d="M 190,30 Q 210,10 230,30 Q 250,50 270,30" stroke-linecap="round"/>
-  </g>
-</svg>"#;
 
 pub struct LatexGenerator {}
 
@@ -31,25 +12,44 @@ impl LatexGenerator {
     pub fn generate_document(&self, book: &CrosswordBook) -> Result<String> {
         let mut latex = String::new();
         
-        // Preamble with SVG support
-        latex.push_str(&self.generate_preamble());
+        // Preamble
+        latex.push_str(&self.generate_preamble(book.config()));
         
         // Begin document
         latex.push_str("\\begin{document}\n\n");
         
-        // Generate professional title page
-        latex.push_str(&self.generate_title_page(book.config())?);
+        // Front matter (roman numerals)
+        latex.push_str("\\frontmatter\n\n");
         
-        // Generate each puzzle
+        // Title page
+        latex.push_str(&self.generate_kdp_title_page(book.config())?);
+        
+        // Copyright page (must be on verso/left/even page)
+        latex.push_str("\\clearpage\n");
+        latex.push_str(&self.generate_copyright_page(book.config()));
+        
+        // Table of contents
+        latex.push_str("\\clearpage\n");
+        latex.push_str(&self.generate_toc(book.puzzle_count()));
+        
+        // Main matter (arabic numerals, starts on odd/right page)
+        latex.push_str("\\cleardoublepage\n");
+        latex.push_str("\\mainmatter\n\n");
+        
+        // Generate puzzles with facing pages (left=puzzle, right=clues)
         for (idx, puzzle) in book.puzzles().iter().enumerate() {
-            latex.push_str(&format!("\\section*{{Puzzle {}}}\n\n", idx + 1));
-            latex.push_str(&self.generate_puzzle(puzzle)?);
-            latex.push_str("\\clearpage\n\n");
+            // Ensure we start on a left (even) page
+            if idx > 0 {
+                latex.push_str("\\cleardoublepage\n");
+            }
+            
+            latex.push_str(&self.generate_puzzle_spread(puzzle, idx + 1)?);
         }
         
-        // Generate answer key
-        latex.push_str("\\clearpage\n");
-        latex.push_str("\\section*{Answer Key}\n\n");
+        // Answer key
+        latex.push_str("\\cleardoublepage\n");
+        latex.push_str("\\chapter*{Answer Key}\n");
+        latex.push_str("\\addcontentsline{toc}{chapter}{Answer Key}\n\n");
         latex.push_str(&self.generate_answer_key(book.puzzles())?);
         
         latex.push_str("\\end{document}\n");
@@ -57,377 +57,215 @@ impl LatexGenerator {
         Ok(latex)
     }
 
-    fn generate_preamble(&self) -> String {
-        String::from(
-            r"\documentclass[11pt,letterpaper]{book}
-\usepackage[top=0.75in,bottom=0.75in,left=0.6in,right=0.6in,headheight=15pt]{geometry}
-\usepackage{tikz}
-\usepackage{multicol}
-\usepackage{enumitem}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{svg}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
-\usepackage{xcolor}
-\usepackage{fancyhdr}
+    fn generate_preamble(&self, config: &crate::book::BookConfig) -> String {
+        let (page_width, page_height, margins) = self.get_kdp_dimensions(config);
+        
+        format!(
+            r"\documentclass[11pt,twoside,openright]{{book}}
 
-% Page style with more header space
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[C]{\thepage}
-\renewcommand{\headrulewidth}{0pt}
-\setlength{\headsep}{0.4in}
+% KDP-compliant page setup
+\usepackage[paperwidth={:.3}in,paperheight={:.3}in,
+            top={:.3}in,bottom={:.3}in,
+            inner={:.3}in,outer={:.3}in]{{geometry}}
 
-% Custom title page commands
-\newcommand{\subtitle}[1]{\Large #1}
-\newcommand{\edition}[1]{\large \textit{#1}}
+\usepackage{{tikz}}
+\usepackage{{enumitem}}
+\usepackage{{amsmath}}
+\usepackage{{graphicx}}
+\usepackage{{svg}}
+\usepackage[T1]{{fontenc}}
+\usepackage{{lmodern}}
+\usepackage{{xcolor}}
+\usepackage{{fancyhdr}}
 
-\setlength{\parindent}{0pt}
-\setlength{\columnsep}{1.2em}
+% Page headers (page numbers only)
+\pagestyle{{fancy}}
+\fancyhf{{}}
+\fancyhead[LE,RO]{{\thepage}}
+\renewcommand{{\headrulewidth}}{{0pt}}
+\setlength{{\headsep}}{{0.4in}}
+
+% Chapter styling (no chapter numbers, cleaner look)
+\usepackage{{titlesec}}
+\titleformat{{\chapter}}[display]
+  {{\normalfont\huge\bfseries}}{{}}{{0pt}}{{\Huge}}
+\titlespacing*{{\chapter}}{{0pt}}{{0pt}}{{20pt}}
+
+\setlength{{\parindent}}{{0pt}}
 
 % Tighter list spacing
-\setlist[enumerate]{itemsep=0.3em,parsep=0pt,topsep=0.3em}
+\setlist[enumerate]{{itemsep=0.2em,parsep=0pt,topsep=0.2em}}
 
-% Remove default title formatting
-\makeatletter
-\renewcommand{\maketitle}{}
-\makeatother
-
-"
+",
+            page_width, page_height,
+            margins.top, margins.bottom, margins.inner, margins.outer
         )
     }
 
-    fn generate_title_page(&self, config: &crate::book::BookConfig) -> Result<String> {
-        let mut latex = String::new();
+    fn get_kdp_dimensions(&self, config: &crate::book::BookConfig) -> (f32, f32, Margins) {
+        let trim = &config.trim_size;
         
-        latex.push_str("\\begin{titlepage}\n");
-        latex.push_str("\\centering\n");
-        latex.push_str("\\vspace*{2cm}\n\n");
-        
-        // Cover SVG if provided
-        if let Some(ref cover_svg) = config.cover_svg_path {
-            if fs::metadata(cover_svg).is_ok() {
-                latex.push_str(&format!(
-                    "\\includesvg[width=0.7\\textwidth]{{{}}}\n\n\\vspace{{2cm}}\n\n",
-                    escape_latex(cover_svg)
-                ));
-            } else {
-                eprintln!("Warning: Cover file not found: {}", cover_svg);
+        match config.kdp_format {
+            KdpFormat::Paperback => {
+                // No bleed for text-only puzzle books
+                // Margins based on KDP requirements (assuming 100-400 pages)
+                let margins = Margins {
+                    top: 0.75,
+                    bottom: 0.75,
+                    inner: 0.625,  // Gutter for binding
+                    outer: 0.5,
+                };
+                (trim.width, trim.height, margins)
+            }
+            KdpFormat::Ebook => {
+                // Ebook: simpler margins
+                let margins = Margins {
+                    top: 0.5,
+                    bottom: 0.5,
+                    inner: 0.5,
+                    outer: 0.5,
+                };
+                (trim.width, trim.height, margins)
             }
         }
+    }
+
+    fn generate_kdp_title_page(&self, config: &crate::book::BookConfig) -> Result<String> {
+        let mut latex = String::new();
+        
+        latex.push_str("\\thispagestyle{empty}\n");
+        latex.push_str("\\begin{center}\n");
+        latex.push_str("\\vspace*{2cm}\n\n");
         
         // Title
         latex.push_str(&format!(
-            "{{\\Huge\\bfseries {}}}\n\n\\vspace{{0.5cm}}\n\n",
+            "{{\\Huge\\bfseries {}}}\n\n",
             escape_latex(&config.title)
         ));
         
-        // Title page decoration SVG
-        if let Some(ref title_svg) = config.title_svg_path {
-            if fs::metadata(title_svg).is_ok() {
-                latex.push_str(&format!(
-                    "\\includesvg[width=0.5\\textwidth]{{{}}}\n\n\\vspace{{1cm}}\n\n",
-                    escape_latex(title_svg)
-                ));
-            } else {
-                eprintln!("Warning: Title decoration file not found: {}", title_svg);
-                latex.push_str(&self.generate_default_decoration());
-            }
-        } else {
-            // Use embedded default decoration
-            latex.push_str(&self.generate_default_decoration());
-        }
+        latex.push_str("\\vspace{1cm}\n\n");
         
-        // Description
+        // Subtitle/description
         if let Some(ref desc) = config.description {
             latex.push_str(&format!(
-                "{{\\Large\\textit{{{}}}}}\n\n\\vspace{{1.5cm}}\n\n",
+                "{{\\Large\\textit{{{}}}}}\n\n",
                 escape_latex(desc)
             ));
-        }
-        
-        // Author
-        if let Some(ref author) = config.author {
-            latex.push_str(&format!(
-                "{{\\Large {}}}\n\n\\vspace{{0.3cm}}\n\n",
-                escape_latex(author)
-            ));
-        }
-        
-        // Edition
-        if let Some(ref edition) = config.edition {
-            latex.push_str(&format!(
-                "{{\\large\\textit{{{}}}}}\n\n\\vspace{{1cm}}\n\n",
-                escape_latex(edition)
-            ));
+            latex.push_str("\\vspace{1.5cm}\n\n");
         }
         
         latex.push_str("\\vfill\n\n");
         
-        // Publisher and ISBN at bottom
-        if config.publisher.is_some() || config.isbn.is_some() {
-            latex.push_str("\\begin{minipage}{0.8\\textwidth}\n");
-            latex.push_str("\\centering\n");
-            
-            if let Some(ref publisher) = config.publisher {
-                latex.push_str(&format!(
-                    "{{\\large {}}}\n\n\\vspace{{0.2cm}}\n\n",
-                    escape_latex(publisher)
-                ));
-            }
-            
-            if let Some(ref isbn) = config.isbn {
-                latex.push_str(&format!(
-                    "ISBN: {}\n\n\\vspace{{0.2cm}}\n\n",
-                    escape_latex(isbn)
-                ));
-            }
-            
-            latex.push_str("\\end{minipage}\n\n");
-        }
-        
-        // Copyright notice
-        if let Some(ref year) = config.copyright_year {
-            latex.push_str("\\vspace{0.5cm}\n\n");
+        // Author
+        if let Some(ref author) = config.author {
             latex.push_str(&format!(
-                "{{\\small Copyright \\copyright{} {}}}\n\n",
-                year,
-                config.author.as_deref().unwrap_or("All Rights Reserved")
+                "{{\\LARGE {}}}\n\n",
+                escape_latex(author)
             ));
-            latex.push_str("\\vspace{0.1cm}\n\n");
-            latex.push_str("{\\small All rights reserved.}\n\n");
         }
         
-        latex.push_str("\\end{titlepage}\n\n");
-        
-        // Add copyright/info page
-        latex.push_str("\\clearpage\n");
-        latex.push_str("\\thispagestyle{empty}\n");
-        latex.push_str("\\vspace*{\\fill}\n");
-        latex.push_str("\\begin{center}\n");
-        latex.push_str("\\textit{This page intentionally left blank.}\n");
+        latex.push_str("\\vspace{2cm}\n\n");
         latex.push_str("\\end{center}\n");
-        latex.push_str("\\vspace*{\\fill}\n");
         latex.push_str("\\clearpage\n\n");
         
         Ok(latex)
     }
 
-    fn generate_default_decoration(&self) -> String {
-        // Generate inline TikZ decoration instead of SVG
-        // This avoids file path dependencies
-        String::from(
-            r"\begin{tikzpicture}[scale=0.4]
-  \draw[line width=1pt] (0,1.5) .. controls (1,0.5) and (2.5,0.5) .. (3.5,1.5);
-  \draw[line width=1pt] (4,1.5) .. controls (5,2.5) and (6.5,2.5) .. (7.5,1.5);
-  \fill (9,0.5) rectangle (10,1.5);
-  \draw (10.5,0.5) rectangle (11.5,1.5);
-  \fill (12,0.5) rectangle (13,1.5);
-  \draw (9,2) rectangle (10,3);
-  \fill (10.5,2) rectangle (11.5,3);
-  \draw (12,2) rectangle (13,3);
-  \fill (9,3.5) rectangle (10,4.5);
-  \draw (10.5,3.5) rectangle (11.5,4.5);
-  \fill (12,3.5) rectangle (13,4.5);
-  \draw[line width=1pt] (14.5,1.5) .. controls (15.5,0.5) and (17,0.5) .. (18,1.5);
-  \draw[line width=1pt] (18.5,1.5) .. controls (19.5,2.5) and (21,2.5) .. (22,1.5);
-\end{tikzpicture}
-
-\\[1cm]
-
-"
-        )
-    }
-
-    fn generate_answer_key(&self, puzzles: &[CrosswordPuzzle]) -> Result<String> {
+    fn generate_copyright_page(&self, config: &crate::book::BookConfig) -> String {
         let mut latex = String::new();
         
-        // 4 puzzles per page, 2x2 grid
-        for (page_idx, chunk) in puzzles.chunks(4).enumerate() {
-            if page_idx > 0 {
-                latex.push_str("\\clearpage\n\n");
-            }
-            
-            for (chunk_idx, puzzle) in chunk.iter().enumerate() {
-                let puzzle_num = page_idx * 4 + chunk_idx + 1;
-                
-                // Start a minipage for each answer (2 per row)
-                if chunk_idx % 2 == 0 {
-                    latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
-                } else {
-                    latex.push_str("\\hfill\n");
-                    latex.push_str("\\begin{minipage}[t]{0.48\\textwidth}\n");
-                }
-                
-                latex.push_str("\\centering\n");
-                latex.push_str(&format!("{{\\large\\textbf{{Puzzle {}}}}}\n\n", puzzle_num));
-                latex.push_str("\\vspace{0.3cm}\n\n");
-                latex.push_str(&self.generate_answer_grid(&puzzle.grid)?);
-                latex.push_str("\\end{minipage}\n");
-                
-                // Line break after every 2 puzzles
-                if chunk_idx % 2 == 1 && chunk_idx < chunk.len() - 1 {
-                    latex.push_str("\n\n\\vspace{1cm}\n\n");
-                }
-            }
-            
-            // Add extra space at end if odd number on last page
-            if chunk.len() % 2 == 1 {
-                latex.push_str("\n\n\\vspace{1cm}\n\n");
-            }
+        latex.push_str("\\thispagestyle{empty}\n");
+        latex.push_str("\\vspace*{\\fill}\n\n");
+        latex.push_str("\\begin{flushleft}\n");
+        latex.push_str("\\small\n\n");
+        
+        // Copyright notice
+        if let Some(ref year) = config.copyright_year {
+            latex.push_str(&format!(
+                "Copyright \\copyright{} {}\n\n",
+                year,
+                config.author.as_deref().unwrap_or("")
+            ));
         }
         
-        Ok(latex)
-    }
-
-    fn generate_answer_grid(&self, grid: &[Vec<Option<char>>]) -> Result<String> {
-        let size = grid.len();
-        let mut latex = String::new();
+        latex.push_str("All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, without the prior written permission of the publisher.\n\n");
         
-        // Scale appropriately for 2 columns - use a fraction of linewidth
-        // This makes each grid fit nicely in its minipage
-        let scale_factor = 0.85;
-        
-        latex.push_str(&format!(
-            "\\begin{{tikzpicture}}[x={{{}\\linewidth/{}}},y={{{}\\linewidth/{}}}]\n",
-            scale_factor, size, scale_factor, size
-        ));
-        
-        // Draw cells with letters
-        for row in 0..size {
-            for col in 0..size {
-                let x = col;
-                let y = size - 1 - row;
-                
-                if let Some(letter) = grid[row][col] {
-                    // White cell with letter
-                    latex.push_str(&format!(
-                        "\\draw ({},{}) rectangle ({},{});\n",
-                        x, y, x + 1, y + 1
-                    ));
-                    
-                    // Add letter in center
-                    latex.push_str(&format!(
-                        "\\node[font=\\footnotesize] at ({},{}) {{{}}};\n",
-                        x as f32 + 0.5, y as f32 + 0.5, letter
-                    ));
-                } else {
-                    // Black cell
-                    latex.push_str(&format!(
-                        "\\fill ({},{}) rectangle ({},{});\n",
-                        x, y, x + 1, y + 1
-                    ));
-                }
-            }
+        // Edition
+        if let Some(ref edition) = config.edition {
+            latex.push_str(&format!("{}\n\n", escape_latex(edition)));
         }
         
-        latex.push_str("\\end{tikzpicture}\n");
+        // ISBN
+        if let Some(ref isbn) = config.isbn {
+            latex.push_str(&format!("ISBN: {}\n\n", escape_latex(isbn)));
+        }
         
-        Ok(latex)
+        // Publisher
+        if let Some(ref publisher) = config.publisher {
+            latex.push_str(&format!(
+                "Published by {}\n\n",
+                escape_latex(publisher)
+            ));
+        }
+        
+        latex.push_str("\\end{flushleft}\n");
+        latex.push_str("\\vspace*{\\fill}\n");
+        latex.push_str("\\clearpage\n\n");
+        
+        latex
     }
 
-    fn generate_puzzle(&self, puzzle: &CrosswordPuzzle) -> Result<String> {
+    fn generate_toc(&self, puzzle_count: usize) -> String {
         let mut latex = String::new();
         
-        // Add more space after the section header
-        latex.push_str("\\vspace{0.5cm}\n");
+        latex.push_str("\\thispagestyle{empty}\n");
+        latex.push_str("\\begin{center}\n");
+        latex.push_str("{\\Large\\bfseries Contents}\n\n");
+        latex.push_str("\\vspace{1cm}\n\n");
+        latex.push_str("\\end{center}\n\n");
         
-        // Generate grid
+        latex.push_str("\\begin{flushleft}\n");
+        for i in 1..=puzzle_count {
+            latex.push_str(&format!("Puzzle {} \\dotfill ~\\pageref{{puzzle:{}}}\n\n", i, i));
+        }
+        latex.push_str("Answer Key \\dotfill ~\\pageref{answerkey}\n\n");
+        latex.push_str("\\end{flushleft}\n");
+        latex.push_str("\\clearpage\n\n");
+        
+        latex
+    }
+
+    fn generate_puzzle_spread(&self, puzzle: &CrosswordPuzzle, number: usize) -> Result<String> {
+        let mut latex = String::new();
+        
+        // LEFT PAGE - Puzzle grid (must be on even page number)
+        latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
+        latex.push_str(&format!("\\chapter*{{Puzzle {}}}\n", number));
+        latex.push_str("\\addcontentsline{toc}{chapter}{Puzzle ");
+        latex.push_str(&number.to_string());
+        latex.push_str("}\n\n");
+        
+        // Center grid vertically on page
+        latex.push_str("\\vspace*{\\fill}\n");
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
         latex.push_str("\\end{center}\n");
-        latex.push_str("\\vspace{0.5cm}\n\n");
+        latex.push_str("\\vspace*{\\fill}\n");
         
-        // Generate clues
-        latex.push_str(&self.generate_clues(&puzzle.across_clues, &puzzle.down_clues));
+        // Force to next page (clues)
+        latex.push_str("\\clearpage\n\n");
         
-        Ok(latex)
-    }
-
-    fn generate_grid(&self, grid: &[Vec<Option<char>>]) -> Result<String> {
-        let size = grid.len();
-        let mut latex = String::new();
-        
-        // Calculate dynamic cell size based on grid dimensions
-        // Use textwidth to scale proportionally
-        // For a 10x10 grid: ~0.7\textwidth, for 16x16: ~0.9\textwidth
-        let width_ratio = if size <= 10 {
-            0.7
-        } else if size <= 15 {
-            0.85
-        } else {
-            0.9
-        };
-        
-        latex.push_str(&format!(
-            "\\begin{{tikzpicture}}[x={{{}\\textwidth/{}}},y={{{}\\textwidth/{}}}]\n",
-            width_ratio, size, width_ratio, size
-        ));
-        
-        // Number tracking for clues
-        let mut numbers = vec![vec![None; size]; size];
-        let mut next_number = 1;
-        
-        // Assign numbers to cells that start words
-        for row in 0..size {
-            for col in 0..size {
-                if grid[row][col].is_some() {
-                    // Check if this starts an across word
-                    let starts_across = col == 0 || grid[row][col - 1].is_none();
-                    let has_across = col < size - 1 && grid[row][col + 1].is_some();
-                    
-                    // Check if this starts a down word
-                    let starts_down = row == 0 || grid[row - 1][col].is_none();
-                    let has_down = row < size - 1 && grid[row + 1][col].is_some();
-                    
-                    if (starts_across && has_across) || (starts_down && has_down) {
-                        numbers[row][col] = Some(next_number);
-                        next_number += 1;
-                    }
-                }
-            }
-        }
-        
-        // Draw cells
-        for row in 0..size {
-            for col in 0..size {
-                let x = col;
-                let y = size - 1 - row;
-                
-                if grid[row][col].is_some() {
-                    // White cell
-                    latex.push_str(&format!(
-                        "\\draw ({},{}) rectangle ({},{});\n",
-                        x, y, x + 1, y + 1
-                    ));
-                    
-                    // Add number if present
-                    if let Some(num) = numbers[row][col] {
-                        latex.push_str(&format!(
-                            "\\node[anchor=north west,font=\\scriptsize,inner sep=0.02] at ({},{}) {{{}}};\n",
-                            x as f32 + 0.05, y as f32 + 0.95, num
-                        ));
-                    }
-                } else {
-                    // Black cell
-                    latex.push_str(&format!(
-                        "\\fill ({},{}) rectangle ({},{});\n",
-                        x, y, x + 1, y + 1
-                    ));
-                }
-            }
-        }
-        
-        latex.push_str("\\end{tikzpicture}\n");
+        // RIGHT PAGE - Clues (will be on odd page number, facing the grid)
+        latex.push_str("\\thispagestyle{fancy}\n\n");
+        latex.push_str(&self.generate_clues_page(&puzzle.across_clues, &puzzle.down_clues));
         
         Ok(latex)
     }
 
-    fn generate_clues(&self, across_clues: &[Clue], down_clues: &[Clue]) -> String {
+    fn generate_clues_page(&self, across_clues: &[Clue], down_clues: &[Clue]) -> String {
         let mut latex = String::new();
         
-        // Use minipages with [t] top alignment instead of multicols
+        // Top-aligned minipages for clues
         latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Across}\n");
         latex.push_str("\\raggedright\n");
@@ -458,6 +296,162 @@ impl LatexGenerator {
         
         latex
     }
+
+    fn generate_grid(&self, grid: &[Vec<Option<char>>]) -> Result<String> {
+        let size = grid.len();
+        let mut latex = String::new();
+        
+        // Dynamic sizing based on grid dimensions
+        let width_ratio = if size <= 10 {
+            0.75
+        } else if size <= 15 {
+            0.85
+        } else {
+            0.95
+        };
+        
+        latex.push_str(&format!(
+            "\\begin{{tikzpicture}}[x={{{}\\textwidth/{}}},y={{{}\\textwidth/{}}}]\n",
+            width_ratio, size, width_ratio, size
+        ));
+        
+        // Number tracking
+        let mut numbers = vec![vec![None; size]; size];
+        let mut next_number = 1;
+        
+        for row in 0..size {
+            for col in 0..size {
+                if grid[row][col].is_some() {
+                    let starts_across = col == 0 || grid[row][col - 1].is_none();
+                    let has_across = col < size - 1 && grid[row][col + 1].is_some();
+                    let starts_down = row == 0 || grid[row - 1][col].is_none();
+                    let has_down = row < size - 1 && grid[row + 1][col].is_some();
+                    
+                    if (starts_across && has_across) || (starts_down && has_down) {
+                        numbers[row][col] = Some(next_number);
+                        next_number += 1;
+                    }
+                }
+            }
+        }
+        
+        // Draw cells
+        for row in 0..size {
+            for col in 0..size {
+                let x = col;
+                let y = size - 1 - row;
+                
+                if grid[row][col].is_some() {
+                    latex.push_str(&format!(
+                        "\\draw ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
+                    ));
+                    
+                    if let Some(num) = numbers[row][col] {
+                        latex.push_str(&format!(
+                            "\\node[anchor=north west,font=\\scriptsize,inner sep=0.02] at ({},{}) {{{}}};\n",
+                            x as f32 + 0.05, y as f32 + 0.95, num
+                        ));
+                    }
+                } else {
+                    latex.push_str(&format!(
+                        "\\fill ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
+                    ));
+                }
+            }
+        }
+        
+        latex.push_str("\\end{tikzpicture}\n");
+        
+        Ok(latex)
+    }
+
+    fn generate_answer_key(&self, puzzles: &[CrosswordPuzzle]) -> Result<String> {
+        let mut latex = String::new();
+        
+        latex.push_str("\\label{answerkey}\n\n");
+        
+        // 4 puzzles per page, 2x2 grid
+        for (page_idx, chunk) in puzzles.chunks(4).enumerate() {
+            if page_idx > 0 {
+                latex.push_str("\\clearpage\n\n");
+            }
+            
+            for (chunk_idx, puzzle) in chunk.iter().enumerate() {
+                let puzzle_num = page_idx * 4 + chunk_idx + 1;
+                
+                if chunk_idx % 2 == 0 {
+                    latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
+                } else {
+                    latex.push_str("\\hfill\n");
+                    latex.push_str("\\begin{minipage}[t]{0.48\\textwidth}\n");
+                }
+                
+                latex.push_str("\\centering\n");
+                latex.push_str(&format!("{{\\large\\textbf{{Puzzle {}}}}}\n\n", puzzle_num));
+                latex.push_str("\\vspace{0.3cm}\n\n");
+                latex.push_str(&self.generate_answer_grid(&puzzle.grid)?);
+                latex.push_str("\\end{minipage}\n");
+                
+                if chunk_idx % 2 == 1 && chunk_idx < chunk.len() - 1 {
+                    latex.push_str("\n\n\\vspace{1cm}\n\n");
+                }
+            }
+            
+            if chunk.len() % 2 == 1 {
+                latex.push_str("\n\n\\vspace{1cm}\n\n");
+            }
+        }
+        
+        Ok(latex)
+    }
+
+    fn generate_answer_grid(&self, grid: &[Vec<Option<char>>]) -> Result<String> {
+        let size = grid.len();
+        let mut latex = String::new();
+        
+        let scale_factor = 0.85;
+        
+        latex.push_str(&format!(
+            "\\begin{{tikzpicture}}[x={{{}\\linewidth/{}}},y={{{}\\linewidth/{}}}]\n",
+            scale_factor, size, scale_factor, size
+        ));
+        
+        for row in 0..size {
+            for col in 0..size {
+                let x = col;
+                let y = size - 1 - row;
+                
+                if let Some(letter) = grid[row][col] {
+                    latex.push_str(&format!(
+                        "\\draw ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
+                    ));
+                    latex.push_str(&format!(
+                        "\\node[font=\\footnotesize] at ({},{}) {{{}}};\n",
+                        x as f32 + 0.5, y as f32 + 0.5, letter
+                    ));
+                } else {
+                    latex.push_str(&format!(
+                        "\\fill ({},{}) rectangle ({},{});\n",
+                        x, y, x + 1, y + 1
+                    ));
+                }
+            }
+        }
+        
+        latex.push_str("\\end{tikzpicture}\n");
+        
+        Ok(latex)
+    }
+}
+
+struct Margins {
+    top: f32,
+    bottom: f32,
+    inner: f32,
+    outer: f32,
 }
 
 impl Default for LatexGenerator {
@@ -485,7 +479,7 @@ mod tests {
 
     #[test]
     fn test_latex_escaping() {
-        assert_eq!(escape_latex("Test & Co."), "Test \\& Co.");
+        assert_eq!(escape_latex("Test & Co."), "Test \\&Co.");
         assert_eq!(escape_latex("$100"), "\\$100");
         assert_eq!(escape_latex("50%"), "50\\%");
         assert_eq!(escape_latex("C++ #include"), "C++ \\#include");

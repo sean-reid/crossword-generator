@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="2560" viewBox="0 0 1600 2560" xmlns="http://www.w3.org/2000/svg">
+  
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="ebookGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2c3e50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34495e;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="ebookGridPattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect width="40" height="40" fill="none"/>
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#4a5f7f" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+  
+  <rect x="0" y="0" width="1600" height="2560" fill="url(#ebookGrad)"/>
+  <rect x="0" y="0" width="1600" height="2560" fill="url(#ebookGridPattern)" opacity="0.5"/>
+  
+  <!-- Title area -->
+  <text id="title_text" x="800" y="280" text-anchor="middle" font-family="Georgia, serif" font-size="100" font-weight="bold" fill="#ffffff" letter-spacing="4">
+    CROSSWORD
+  </text>
+  <text id="subtitle_text" x="800" y="380" text-anchor="middle" font-family="Georgia, serif" font-size="60" fill="#ecf0f1">
+    PUZZLES
+  </text>
+  
+  <!-- Decorative line -->
+  <line x1="200" y1="450" x2="1400" y2="450" stroke="#ecf0f1" stroke-width="3" opacity="0.6"/>
+  
+  <!-- Large 16x16 crossword grid -->
+  <g id="crossword_main" transform="translate(80, 550)">
+    <!-- Define cell size: 16x16 grid fitting in 1440px = 90px per cell -->
+    <g id="grid">
+      <!-- Main grid outline -->
+      <rect x="0" y="0" width="1440" height="1440" fill="#ffffff" stroke="#2c3e50" stroke-width="5"/>
+      
+      <!-- Grid lines -->
+      <g stroke="#2c3e50" stroke-width="2">
+        <!-- Vertical lines -->
+        <line x1="90" y1="0" x2="90" y2="1440"/>
+        <line x1="180" y1="0" x2="180" y2="1440"/>
+        <line x1="270" y1="0" x2="270" y2="1440"/>
+        <line x1="360" y1="0" x2="360" y2="1440"/>
+        <line x1="450" y1="0" x2="450" y2="1440"/>
+        <line x1="540" y1="0" x2="540" y2="1440"/>
+        <line x1="630" y1="0" x2="630" y2="1440"/>
+        <line x1="720" y1="0" x2="720" y2="1440"/>
+        <line x1="810" y1="0" x2="810" y2="1440"/>
+        <line x1="900" y1="0" x2="900" y2="1440"/>
+        <line x1="990" y1="0" x2="990" y2="1440"/>
+        <line x1="1080" y1="0" x2="1080" y2="1440"/>
+        <line x1="1170" y1="0" x2="1170" y2="1440"/>
+        <line x1="1260" y1="0" x2="1260" y2="1440"/>
+        <line x1="1350" y1="0" x2="1350" y2="1440"/>
+        
+        <!-- Horizontal lines -->
+        <line x1="0" y1="90" x2="1440" y2="90"/>
+        <line x1="0" y1="180" x2="1440" y2="180"/>
+        <line x1="0" y1="270" x2="1440" y2="270"/>
+        <line x1="0" y1="360" x2="1440" y2="360"/>
+        <line x1="0" y1="450" x2="1440" y2="450"/>
+        <line x1="0" y1="540" x2="1440" y2="540"/>
+        <line x1="0" y1="630" x2="1440" y2="630"/>
+        <line x1="0" y1="720" x2="1440" y2="720"/>
+        <line x1="0" y1="810" x2="1440" y2="810"/>
+        <line x1="0" y1="900" x2="1440" y2="900"/>
+        <line x1="0" y1="990" x2="1440" y2="990"/>
+        <line x1="0" y1="1080" x2="1440" y2="1080"/>
+        <line x1="0" y1="1170" x2="1440" y2="1170"/>
+        <line x1="0" y1="1260" x2="1440" y2="1260"/>
+        <line x1="0" y1="1350" x2="1440" y2="1350"/>
+      </g>
+      
+      <!-- Black squares -->
+      <g fill="#2c3e50">
+        <rect x="270" y="0" width="90" height="90"/>
+        <rect x="990" y="0" width="90" height="90"/>
+        <rect x="270" y="90" width="90" height="90"/>
+        <rect x="630" y="90" width="90" height="90"/>
+        <rect x="990" y="90" width="90" height="90"/>
+        <rect x="270" y="180" width="90" height="90"/>
+        <rect x="630" y="180" width="90" height="90"/>
+        <rect x="990" y="180" width="90" height="90"/>
+        <rect x="0" y="270" width="90" height="90"/>
+        <rect x="90" y="270" width="90" height="90"/>
+        <rect x="180" y="270" width="90" height="90"/>
+        <rect x="630" y="270" width="90" height="90"/>
+        <rect x="1260" y="270" width="90" height="90"/>
+        <rect x="1350" y="270" width="90" height="90"/>
+        <rect x="450" y="360" width="90" height="90"/>
+        <rect x="990" y="360" width="90" height="90"/>
+        <rect x="450" y="450" width="90" height="90"/>
+        <rect x="810" y="450" width="90" height="90"/>
+        <rect x="360" y="540" width="90" height="90"/>
+        <rect x="900" y="540" width="90" height="90"/>
+        <rect x="1260" y="540" width="90" height="90"/>
+        <rect x="270" y="630" width="90" height="90"/>
+        <rect x="1170" y="630" width="90" height="90"/>
+        <rect x="180" y="720" width="90" height="90"/>
+        <rect x="1080" y="720" width="90" height="90"/>
+        <rect x="90" y="810" width="90" height="90"/>
+        <rect x="450" y="810" width="90" height="90"/>
+        <rect x="990" y="810" width="90" height="90"/>
+        <rect x="540" y="900" width="90" height="90"/>
+        <rect x="900" y="900" width="90" height="90"/>
+        <rect x="360" y="990" width="90" height="90"/>
+        <rect x="900" y="990" width="90" height="90"/>
+        <rect x="0" y="1080" width="90" height="90"/>
+        <rect x="90" y="1080" width="90" height="90"/>
+        <rect x="720" y="1080" width="90" height="90"/>
+        <rect x="1170" y="1080" width="90" height="90"/>
+        <rect x="1260" y="1080" width="90" height="90"/>
+        <rect x="1350" y="1080" width="90" height="90"/>
+        <rect x="360" y="1170" width="90" height="90"/>
+        <rect x="720" y="1170" width="90" height="90"/>
+        <rect x="1080" y="1170" width="90" height="90"/>
+        <rect x="360" y="1260" width="90" height="90"/>
+        <rect x="720" y="1260" width="90" height="90"/>
+        <rect x="1080" y="1260" width="90" height="90"/>
+        <rect x="360" y="1350" width="90" height="90"/>
+        <rect x="1080" y="1350" width="90" height="90"/>
+      </g>
+      
+      <!-- Numbers -->
+      <g font-family="Arial, sans-serif" font-size="26" fill="#2c3e50" font-weight="bold">
+        <text x="6" y="26">1</text>
+        <text x="96" y="26">2</text>
+        <text x="186" y="26">3</text>
+        <text x="366" y="26">4</text>
+        <text x="456" y="26">5</text>
+        <text x="546" y="26">6</text>
+        <text x="726" y="26">7</text>
+        <text x="816" y="26">8</text>
+        <text x="906" y="26">9</text>
+        <text x="1086" y="26">10</text>
+        <text x="1176" y="26">11</text>
+        <text x="1266" y="26">12</text>
+        <text x="1356" y="26">13</text>
+        <text x="6" y="116">14</text>
+        <text x="366" y="116">15</text>
+        <text x="726" y="116">16</text>
+        <text x="1086" y="116">17</text>
+        <text x="6" y="206">18</text>
+        <text x="366" y="206">19</text>
+        <text x="726" y="206">20</text>
+        <text x="1086" y="206">21</text>
+        <text x="276" y="296">22</text>
+        <text x="726" y="296">23</text>
+        <text x="6" y="386">24</text>
+        <text x="96" y="386">25</text>
+        <text x="186" y="386">26</text>
+        <text x="546" y="386">27</text>
+        <text x="636" y="386">28</text>
+        <text x="1086" y="386">29</text>
+        <text x="1266" y="386">30</text>
+        <text x="1356" y="386">31</text>
+        <text x="6" y="476">32</text>
+        <text x="546" y="476">33</text>
+        <text x="906" y="476">34</text>
+        <text x="996" y="476">35</text>
+        <text x="6" y="566">36</text>
+        <text x="456" y="566">37</text>
+        <text x="816" y="566">38</text>
+        <text x="996" y="566">39</text>
+        <text x="6" y="656">40</text>
+        <text x="366" y="656">41</text>
+        <text x="906" y="656">42</text>
+        <text x="1266" y="656">43</text>
+        <text x="6" y="746">44</text>
+        <text x="276" y="746">45</text>
+        <text x="1176" y="746">46</text>
+        <text x="186" y="836">47</text>
+        <text x="546" y="836">48</text>
+        <text x="1086" y="836">49</text>
+        <text x="6" y="926">50</text>
+        <text x="96" y="926">51</text>
+        <text x="456" y="926">52</text>
+        <text x="636" y="926">53</text>
+        <text x="996" y="926">54</text>
+        <text x="6" y="1016">55</text>
+        <text x="456" y="1016">56</text>
+        <text x="546" y="1016">57</text>
+        <text x="996" y="1016">58</text>
+        <text x="186" y="1106">59</text>
+        <text x="816" y="1106">60</text>
+        <text x="906" y="1106">61</text>
+        <text x="6" y="1196">62</text>
+        <text x="96" y="1196">63</text>
+        <text x="456" y="1196">64</text>
+        <text x="816" y="1196">65</text>
+        <text x="1176" y="1196">66</text>
+        <text x="1266" y="1196">67</text>
+        <text x="1356" y="1196">68</text>
+        <text x="6" y="1286">69</text>
+        <text x="456" y="1286">70</text>
+        <text x="816" y="1286">71</text>
+        <text x="1176" y="1286">72</text>
+        <text x="6" y="1376">73</text>
+        <text x="456" y="1376">74</text>
+        <text x="1176" y="1376">75</text>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Decorative line -->
+  <line x1="200" y1="2070" x2="1400" y2="2070" stroke="#ecf0f1" stroke-width="3" opacity="0.6"/>
+  
+  <!-- Author area -->
+  <text id="author_text" x="800" y="2180" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" fill="#ecf0f1" letter-spacing="2">
+    BY SEAN REID
+  </text>
+  
+  <!-- Optional border to prevent white bleeding on light backgrounds -->
+  <rect x="0" y="0" width="1600" height="2560" fill="none" stroke="#2c3e50" stroke-width="4"/>
+</svg>

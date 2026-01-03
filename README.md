@@ -45,6 +45,9 @@ crossword-generator/
 
 - **Web App**: Interactive browser-based puzzle generation (uses built-in clean word filter)
 - **CLI Tool**: Generate professional LaTeX books ready for publishing
+- **KDP Compliant**: Proper margins, gutters, facing pages, and front matter for Amazon KDP
+- **Facing Pages**: Puzzle on left, clues on right - see both at once
+- **Professional Front Matter**: Title page, copyright page, table of contents
 - **Word Filtering**: Custom allowlist support to control vocabulary
 - **Parallel Generation**: Uses all CPU cores with rayon for fast batch generation
 - **Publishing Ready**: Customizable title page with author, ISBN, publisher info
@@ -79,11 +82,30 @@ cargo build --release -p crossword-cli
 # Basic - generate 10 puzzles in parallel
 ./target/release/crossword-cli -c 10 -o book.tex
 
-# With custom word allowlist (filters out unwanted words)
+# KDP Paperback (default) - proper facing pages, margins, front matter
+./target/release/crossword-cli \
+    --count 100 \
+    --title "Ultimate Crosswords" \
+    --author "Sean Reid" \
+    --publisher "Kindle Direct Publishing" \
+    --isbn "979-8-218-12345-6" \
+    --copyright "2024" \
+    --trim-size 6x9 \
+    --kdp-format paperback \
+    -o kdp-book.tex
+
+# With word filtering for family-friendly content
 ./target/release/crossword-cli \
     --count 50 \
-    --allowlist my-clean-words.txt \
+    --allowlist clean-words.txt \
+    --author "Sean Reid" \
     -o clean-book.tex
+
+# KDP Ebook format (simpler margins)
+./target/release/crossword-cli \
+    --count 50 \
+    --kdp-format ebook \
+    -o ebook.tex
 
 # Professional book ready for Amazon KDP
 ./target/release/crossword-cli \
@@ -119,6 +141,8 @@ cargo build --release -p crossword-cli
 - `--seed` - Random seed for reproducibility
 - `--compile` - Auto-compile PDF with pdflatex
 - `--allowlist` - Path to word allowlist file (one word per line, filters dictionary)
+- `--kdp-format` - paperback or ebook (default: paperback)
+- `--trim-size` - Paperback size: 5x8, 5.5x8.5, 6x9, 7x10, 8x10 (default: 6x9)
 
 **Publishing Options:**
 - `-t, --title` - Book title

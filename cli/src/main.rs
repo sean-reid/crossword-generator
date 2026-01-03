@@ -79,6 +79,14 @@ struct Args {
     /// Path to word allowlist file (one word per line, filters dictionary)
     #[arg(long)]
     allowlist: Option<PathBuf>,
+
+    /// KDP format: paperback or ebook (default: paperback)
+    #[arg(long, default_value = "paperback")]
+    kdp_format: String,
+
+    /// Trim size for paperback (default: 6x9, options: 5x8, 5.5x8.5, 6x9, 7x10, 8x10)
+    #[arg(long, default_value = "6x9")]
+    trim_size: String,
 }
 
 fn main() -> Result<()> {
@@ -121,6 +129,15 @@ fn main() -> Result<()> {
     config.isbn = args.isbn;
     config.copyright_year = args.copyright;
     config.description = args.description;
+    
+    // Set KDP format
+    config.kdp_format = match args.kdp_format.to_lowercase().as_str() {
+        "ebook" => book::KdpFormat::Ebook,
+        _ => book::KdpFormat::Paperback,
+    };
+    
+    // Set trim size
+    config.trim_size = book::TrimSize::from_string(&args.trim_size)?;
     
     // Read SVG files if provided
     config.cover_svg_path = args.cover_svg.as_ref()
@@ -280,7 +297,7 @@ fn compile_pdf(latex_path: &PathBuf) -> Result<()> {
     }
     
     println!("Running pdflatex...");
-    let output = Command::new("pdflatex")
+    let _output = Command::new("pdflatex")
         .arg("-interaction=nonstopmode")
         .arg(latex_path)
         .output()

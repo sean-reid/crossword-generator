@@ -14,6 +14,33 @@ pub struct BookConfig {
     pub title_svg_path: Option<String>,
     pub grid_size: usize,
     pub puzzles_per_page: usize,
+    pub kdp_format: KdpFormat,
+    pub trim_size: TrimSize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum KdpFormat {
+    Paperback,
+    Ebook,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrimSize {
+    pub width: f32,  // inches
+    pub height: f32, // inches
+}
+
+impl TrimSize {
+    pub fn from_string(s: &str) -> anyhow::Result<Self> {
+        match s {
+            "5x8" => Ok(TrimSize { width: 5.0, height: 8.0 }),
+            "5.5x8.5" => Ok(TrimSize { width: 5.5, height: 8.5 }),
+            "6x9" => Ok(TrimSize { width: 6.0, height: 9.0 }),
+            "7x10" => Ok(TrimSize { width: 7.0, height: 10.0 }),
+            "8x10" => Ok(TrimSize { width: 8.0, height: 10.0 }),
+            _ => anyhow::bail!("Invalid trim size: {}. Use 5x8, 5.5x8.5, 6x9, 7x10, or 8x10", s),
+        }
+    }
 }
 
 impl BookConfig {
@@ -30,6 +57,8 @@ impl BookConfig {
             title_svg_path: None,
             grid_size,
             puzzles_per_page: 1,
+            kdp_format: KdpFormat::Paperback,
+            trim_size: TrimSize { width: 6.0, height: 9.0 },
         }
     }
 }
