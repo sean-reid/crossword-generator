@@ -176,8 +176,8 @@ impl LatexGenerator {
         
         latex.push_str("\\thispagestyle{empty}\n");
         latex.push_str("\\vspace*{\\fill}\n\n");
-        latex.push_str("\\begin{flushleft}\n");
-        latex.push_str("\\small\n\n");
+        latex.push_str("\\begin{center}\n");
+        latex.push_str("\\normalsize\n\n");
         
         // Copyright notice
         if let Some(ref year) = config.copyright_year {
@@ -188,16 +188,27 @@ impl LatexGenerator {
             ));
         }
         
-        latex.push_str("All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, without the prior written permission of the publisher.\n\n");
+        latex.push_str("\\vspace{0.5cm}\n\n");
+        
+        latex.push_str("All rights reserved.\n\n");
+        
+        latex.push_str("\\begin{minipage}{0.8\\textwidth}\n");
+        latex.push_str("\\centering\n");
+        latex.push_str("No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, without the prior written permission of the publisher.\n");
+        latex.push_str("\\end{minipage}\n\n");
+        
+        latex.push_str("\\vspace{1cm}\n\n");
         
         // Edition
         if let Some(ref edition) = config.edition {
             latex.push_str(&format!("{}\n\n", escape_latex(edition)));
+            latex.push_str("\\vspace{0.5cm}\n\n");
         }
         
         // ISBN
         if let Some(ref isbn) = config.isbn {
             latex.push_str(&format!("ISBN: {}\n\n", escape_latex(isbn)));
+            latex.push_str("\\vspace{0.5cm}\n\n");
         }
         
         // Publisher
@@ -208,7 +219,7 @@ impl LatexGenerator {
             ));
         }
         
-        latex.push_str("\\end{flushleft}\n");
+        latex.push_str("\\end{center}\n");
         latex.push_str("\\vspace*{\\fill}\n");
         latex.push_str("\\clearpage\n\n");
         
