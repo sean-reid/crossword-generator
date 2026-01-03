@@ -173,8 +173,12 @@ impl Dictionary {
             "v. & n. ",
             "adj. & adv. ",
             "adv. & adj. ",
+            "& predic.adj. ",
+            "& predic. adj. ",
             "attrib. adj. ",
             "attrib.adj. ",
+            "predic.adj. ",
+            "predic. adj. ",
             "n.pl. ",
             "v.tr. ",
             "v.intr. ",
@@ -436,7 +440,7 @@ impl Dictionary {
         }
         
         // Strip leading POS that got capitalized
-        for marker in ["N.", "V.", "Adj.", "Adv.", "Prep.", "Conj."] {
+        for marker in ["N.", "V.", "Adj.", "Adv.", "Prep.", "Conj.", "& predic.adj.", "& predic. adj."] {
             if def.starts_with(marker) {
                 def = def[marker.len()..].to_string();
                 let mut chars = def.chars();
@@ -445,6 +449,27 @@ impl Dictionary {
                 }
                 break;
             }
+        }
+        
+        // Final pass: one last check for any remaining leading numbers
+        def = def.trim().to_string();
+        while let Some(first_char) = def.chars().next() {
+            if first_char.is_ascii_digit() && def.len() > 2 {
+                if let Some(space_pos) = def.find(' ') {
+                    def = def[space_pos + 1..].trim().to_string();
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        
+        // Re-capitalize after final cleanup
+        def = def.trim().to_string();
+        let mut chars = def.chars();
+        if let Some(first) = chars.next() {
+            def = first.to_uppercase().collect::<String>() + chars.as_str();
         }
         
         def
