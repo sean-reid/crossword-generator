@@ -79,7 +79,7 @@ impl Dictionary {
             .iter()
             .filter(|(w, def)| {
                 let len = w.len();
-                let valid_word = len >= 3 && w.chars().all(|c| c.is_ascii_alphabetic());
+                let valid_word = len >= 3 && len <= 15 && w.chars().all(|c| c.is_ascii_alphabetic());
                 
                 let def_lower = def.to_lowercase();
                 let not_special = !def_lower.starts_with("prefix")
@@ -91,7 +91,7 @@ impl Dictionary {
                 let clue = Self::extract_clue(def);
                 let clean_clue = clue != "Definition not available" 
                     && !clue.to_lowercase().contains(&w.to_lowercase())
-                    && clue.len() > 15
+                    && clue.len() > 10
                     && !clue.to_lowercase().starts_with("of ")
                     && !clue.contains(") ")
                     && !clue.ends_with(")")
@@ -202,6 +202,7 @@ impl Dictionary {
                 || s.to_lowercase().starts_with("colloq. ")
                 || s.to_lowercase().starts_with("derog. ")
                 || s.to_lowercase().starts_with("joc. ")
+                || s.to_lowercase().starts_with("aux. ")
         };
         
         while style_pattern(&def) {
@@ -253,9 +254,19 @@ impl Dictionary {
         }
         
         // Remove usage labels
-        for label in &["colloq. ", "esp. ", "usu. "] {
-            if def.to_lowercase().starts_with(label) {
+        for label in &["colloq. ", "esp. ", "usu. ", "aux. "] {
+            while def.to_lowercase().starts_with(label) {
                 def = def[label.len()..].to_string();
+            }
+        }
+        
+        // Third pass: one more check for leading numbers after all label cleanup
+        def = def.trim().to_string();
+        if let Some(first_char) = def.chars().next() {
+            if first_char.is_ascii_digit() {
+                if def.len() > 2 && def.chars().nth(1) == Some(' ') {
+                    def = def[2..].trim().to_string();
+                }
             }
         }
         
