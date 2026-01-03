@@ -18,13 +18,13 @@ pub struct BookConfig {
     pub trim_size: TrimSize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum KdpFormat {
     Paperback,
     Ebook,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TrimSize {
     pub width: f32,  // inches
     pub height: f32, // inches

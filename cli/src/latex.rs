@@ -1,4 +1,4 @@
-use crossword_core::{CrosswordPuzzle, Clue};
+use crossword_core::CrosswordPuzzle;
 use crate::book::{CrosswordBook, KdpFormat};
 use anyhow::Result;
 
@@ -249,7 +249,14 @@ impl LatexGenerator {
     fn generate_puzzle_spread(&self, puzzle: &CrosswordPuzzle, number: usize) -> Result<String> {
         let mut latex = String::new();
         
-        // LEFT PAGE - Grid only
+        // Ensure we start on an EVEN page (left side)
+        if number > 1 {
+            latex.push_str("\\cleardoublepage\n");
+            // If we're on an odd page, add a blank to get to even
+            latex.push_str("\\ifodd\\value{page}\\clearpage\\fi\n");
+        }
+        
+        // LEFT PAGE (EVEN) - Grid only
         latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
         latex.push_str(&format!("\\chapter*{{Puzzle {}}}\n", number));
         latex.push_str("\\addcontentsline{toc}{chapter}{Puzzle ");
@@ -266,7 +273,7 @@ impl LatexGenerator {
         // Force to next page (clues)
         latex.push_str("\\clearpage\n\n");
         
-        // RIGHT PAGE - Both Across and Down clues
+        // RIGHT PAGE (ODD) - Both Across and Down clues
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
         // Top-aligned minipages for clues

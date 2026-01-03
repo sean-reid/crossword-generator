@@ -8,9 +8,11 @@ use rand::seq::SliceRandom;
 
 mod latex;
 mod book;
+mod cover;
 
 use latex::LatexGenerator;
 use book::{BookConfig, CrosswordBook};
+use cover::CoverGenerator;
 
 #[derive(Parser, Debug)]
 #[command(name = "crossword-cli")]
@@ -87,6 +89,22 @@ struct Args {
     /// Trim size for paperback (default: 6x9, options: 5x8, 5.5x8.5, 6x9, 7x10, 8x10)
     #[arg(long, default_value = "6x9")]
     trim_size: String,
+
+    /// Path to paperback cover template SVG
+    #[arg(long)]
+    paperback_cover_template: Option<PathBuf>,
+
+    /// Path to ebook cover template SVG
+    #[arg(long)]
+    ebook_cover_template: Option<PathBuf>,
+
+    /// Generate cover file (requires template)
+    #[arg(long)]
+    generate_cover: bool,
+
+    /// Use color interior for spine width calculation (affects cover)
+    #[arg(long)]
+    color_interior: bool,
 }
 
 fn main() -> Result<()> {
@@ -145,6 +163,12 @@ fn main() -> Result<()> {
     config.title_svg_path = args.title_svg.as_ref()
         .map(|p| p.to_string_lossy().to_string());
 
+    // Clone values we'll need later for cover generation
+    let title_for_cover = config.title.clone();
+    let author_for_cover = config.author.clone();
+    let trim_size_for_cover = config.trim_size.clone();
+    let kdp_format_for_cover = config.kdp_format.clone();
+
     let mut book = CrosswordBook::new(config);
 
     println!("\nGenerating {} puzzles of size {}x{} in parallel...", args.count, args.size, args.size);
@@ -197,6 +221,49 @@ fn main() -> Result<()> {
         .context("Failed to write output file")?;
 
     println!("\n✅ LaTeX: {}", args.output.display());
+
+    // Generate cover if requested
+    if args.generate_cover {
+        println!("\nGenerating cover...");
+        
+        let is_paperback = matches!(kdp_format_for_cover, book::KdpFormat::Paperback);
+        let template_path = if is_paperback {
+            args.paperback_cover_template.as_ref()
+        } else {
+            args.ebook_cover_template.as_ref()
+        };
+        
+        if let Some(template) = template_path {
+            let cover_gen = CoverGenerator::new(
+                book.puzzle_count() + 6,  // Add front matter pages
+                trim_size_for_cover.width,
+                trim_size_for_cover.height,
+            );
+            
+            let cover_svg = if is_paperback {
+                cover_gen.generate_paperback_cover(
+                    &template.to_string_lossy(),
+                    &title_for_cover,
+                    author_for_cover.as_deref().unwrap_or(""),
+                    book.puzzle_count(),
+                    args.color_interior,
+                )?
+            } else {
+                cover_gen.generate_ebook_cover(
+                    &template.to_string_lossy(),
+                    &title_for_cover,
+                    author_for_cover.as_deref().unwrap_or(""),
+                    book.puzzle_count(),
+                )?
+            };
+            
+            let cover_path = args.output.with_extension("cover.svg");
+            fs::write(&cover_path, cover_svg)?;
+            println!("✅ Cover: {}", cover_path.display());
+        } else {
+            eprintln!("⚠️  No cover template provided. Use --paperback-cover-template or --ebook-cover-template");
+        }
+    }
 
     if args.compile {
         match compile_pdf(&args.output) {

@@ -46,6 +46,7 @@ crossword-generator/
 - **Web App**: Interactive browser-based puzzle generation (uses built-in clean word filter)
 - **CLI Tool**: Generate professional LaTeX books ready for publishing
 - **KDP Compliant**: Proper margins, gutters, facing pages, and front matter for Amazon KDP
+- **Cover Generation**: Automatically generate KDP covers with correct spine width from templates
 - **Facing Pages**: Puzzle on left, clues on right - see both at once
 - **Professional Front Matter**: Title page, copyright page, table of contents
 - **Word Filtering**: Custom allowlist support to control vocabulary
@@ -92,6 +93,8 @@ cargo build --release -p crossword-cli
     --copyright "2024" \
     --trim-size 6x9 \
     --kdp-format paperback \
+    --generate-cover \
+    --paperback-cover-template cli/paperback-cover.svg \
     -o kdp-book.tex
 
 # With word filtering for family-friendly content
@@ -143,6 +146,12 @@ cargo build --release -p crossword-cli
 - `--allowlist` - Path to word allowlist file (one word per line, filters dictionary)
 - `--kdp-format` - paperback or ebook (default: paperback)
 - `--trim-size` - Paperback size: 5x8, 5.5x8.5, 6x9, 7x10, 8x10 (default: 6x9)
+
+**Cover Generation:**
+- `--generate-cover` - Generate KDP cover from template
+- `--paperback-cover-template` - Path to paperback cover SVG template
+- `--ebook-cover-template` - Path to ebook cover SVG template
+- `--color-interior` - Use color interior spine calculation (default: black & white)
 
 **Publishing Options:**
 - `-t, --title` - Book title
