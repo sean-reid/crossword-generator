@@ -472,6 +472,22 @@ impl Dictionary {
             def = first.to_uppercase().collect::<String>() + chars.as_str();
         }
         
+        // Remove unmatched opening parenthesis at end
+        def = def.trim().to_string();
+        if def.ends_with(" (") || def.ends_with("(") {
+            def = def.trim_end_matches('(').trim().to_string();
+        }
+        
+        // Check for unmatched parenthesis (more opening than closing)
+        let open_count = def.matches('(').count();
+        let close_count = def.matches(')').count();
+        if open_count > close_count {
+            // Find last unmatched opening paren and remove everything from there
+            if let Some(last_open) = def.rfind('(') {
+                def = def[..last_open].trim().to_string();
+            }
+        }
+        
         def
     }
     
