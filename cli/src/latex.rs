@@ -367,7 +367,7 @@ impl LatexGenerator {
         let mut latex = String::new();
         
         // Fixed 70% width for all puzzles to ensure they fit
-        let width_ratio = 0.70;
+        let width_ratio = 0.95;
         
         latex.push_str(&format!(
             "\\begin{{tikzpicture}}[x={{{}\\textwidth/{}}},y={{{}\\textwidth/{}}}]\n",
