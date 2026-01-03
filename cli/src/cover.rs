@@ -50,39 +50,22 @@ impl CoverGenerator {
         &self,
         template_path: &str,
         title: &str,
+        subtitle: &str,
         author: &str,
-        puzzle_count: usize,
         color: bool,
     ) -> Result<String> {
         let mut svg = fs::read_to_string(template_path)?;
         let dims = self.calculate_cover_dimensions(color);
         
         // Convert to pixels (assuming 96 DPI for SVG)
-        let px_width = (dims.total_width * 96.0) as u32;
-        let px_height = (dims.total_height * 96.0) as u32;
         let px_spine = (dims.spine_width * 96.0) as u32;
-        let px_back_width = (dims.back_cover_width * 96.0) as u32;
-        let px_front_start = px_back_width + px_spine;
         
-        // Update SVG dimensions
-        svg = svg.replace("width=\"5215\"", &format!("width=\"{}\"", px_width));
-        svg = svg.replace("height=\"3375\"", &format!("height=\"{}\"", px_height));
-        svg = svg.replace("viewBox=\"0 0 5215 3375\"", &format!("viewBox=\"0 0 {} {}\"", px_width, px_height));
-        
-        // Update back cover width
-        svg = svg.replace("width=\"2587.5\"", &format!("width=\"{}\"", px_back_width));
-        
-        // Update spine position and width
-        svg = svg.replace("x=\"2587.5\"", &format!("x=\"{}\"", px_back_width));
+        // ONLY update spine width - leave everything else as-is
         svg = svg.replace("width=\"40.5\"", &format!("width=\"{}\"", px_spine));
-        
-        // Update front cover position and width
-        svg = svg.replace("x=\"2628\"", &format!("x=\"{}\"", px_front_start));
-        svg = svg.replace("width=\"2587\"", &format!("width=\"{}\"", px_back_width));
         
         // Replace title text
         svg = svg.replace("CROSSWORD", title);
-        svg = svg.replace("PUZZLES", &format!("{} Puzzles", puzzle_count));
+        svg = svg.replace("PUZZLES", subtitle);
         
         // Replace author
         svg = svg.replace("BY SEAN REID", &format!("BY {}", author.to_uppercase()));
@@ -95,17 +78,14 @@ impl CoverGenerator {
         &self,
         template_path: &str,
         title: &str,
+        subtitle: &str,
         author: &str,
-        puzzle_count: usize,
     ) -> Result<String> {
         let mut svg = fs::read_to_string(template_path)?;
         
-        // Standard ebook dimensions (1600x2560 for KDP)
-        // Already correct in template
-        
         // Replace title text
         svg = svg.replace("CROSSWORD", title);
-        svg = svg.replace("PUZZLES", &format!("{} Puzzles", puzzle_count));
+        svg = svg.replace("PUZZLES", subtitle);
         
         // Replace author
         svg = svg.replace("BY SEAN REID", &format!("BY {}", author.to_uppercase()));

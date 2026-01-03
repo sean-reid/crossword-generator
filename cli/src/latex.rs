@@ -36,7 +36,10 @@ impl LatexGenerator {
         latex.push_str("\\cleardoublepage\n");
         latex.push_str("\\mainmatter\n\n");
         
-        // Generate puzzles with facing pages (left=puzzle, right=clues)
+        // Introduction page (will be page 1, odd/right)
+        latex.push_str(&self.generate_introduction(book.config()));
+        
+        // Generate puzzles with facing pages (clues on left, grid on right)
         for (idx, puzzle) in book.puzzles().iter().enumerate() {
             // Ensure we start on a left (even) page
             if idx > 0 {
@@ -246,34 +249,44 @@ impl LatexGenerator {
         latex
     }
 
+    fn generate_introduction(&self, config: &crate::book::BookConfig) -> String {
+        let mut latex = String::new();
+        
+        latex.push_str("\\chapter*{Introduction}\n\n");
+        
+        latex.push_str("Crossword puzzles have captivated minds for over a century, beginning with Arthur Wynne's \\textit{Word-Cross} puzzle published in the \\textit{New York World} on December 21, 1913. What started as a simple diamond-shaped grid has evolved into one of the world's most beloved pastimes, challenging millions of solvers daily.\n\n");
+        
+        latex.push_str("The beauty of a well-crafted crossword lies in the delicate balance between challenge and satisfaction. Each puzzle is a carefully constructed lattice of interlocking words, where every letter serves double duty, connecting both across and down entries. The best puzzles reward both knowledge and wordplay, offering that satisfying ``aha!'' moment when a difficult clue finally clicks.\n\n");
+        
+        latex.push_str("This collection is designed to provide hours of engaging entertainment. Whether you're a seasoned cruciverbalist or a curious beginner, these puzzles offer a perfect blend of vocabulary, general knowledge, and lateral thinking.\n\n");
+        
+        latex.push_str("Each puzzle is printed with the grid on the right page and clues on the left, allowing you to see both simultaneously as you solve. Take your time, work in pencil, and remember: every puzzle has a solution, and the journey to finding it is half the fun.\n\n");
+        
+        latex.push_str("\\vspace{1cm}\n\n");
+        latex.push_str("Happy solving!\n\n");
+        
+        if let Some(ref author) = config.author {
+            latex.push_str("\\vspace{0.5cm}\n\n");
+            latex.push_str("\\hfill ");
+            latex.push_str(&escape_latex(author));
+            latex.push_str("\n\n");
+        }
+        
+        // Don't add clearpage - let next content flow to page 2
+        
+        latex
+    }
+
     fn generate_puzzle_spread(&self, puzzle: &CrosswordPuzzle, number: usize) -> Result<String> {
         let mut latex = String::new();
         
-        // Ensure we start on an EVEN page (left side)
-        if number > 1 {
-            latex.push_str("\\cleardoublepage\n");
-            // If we're on an odd page, add a blank to get to even
-            latex.push_str("\\ifodd\\value{page}\\clearpage\\fi\n");
-        }
-        
-        // LEFT PAGE (EVEN) - Grid only
+        // LEFT PAGE - Clues (Across + Down)
         latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
         latex.push_str(&format!("\\chapter*{{Puzzle {}}}\n", number));
         latex.push_str("\\addcontentsline{toc}{chapter}{Puzzle ");
         latex.push_str(&number.to_string());
         latex.push_str("}\n\n");
         
-        // Center grid vertically on page
-        latex.push_str("\\vspace*{\\fill}\n");
-        latex.push_str("\\begin{center}\n");
-        latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n");
-        latex.push_str("\\vspace*{\\fill}\n");
-        
-        // Force to next page (clues)
-        latex.push_str("\\clearpage\n\n");
-        
-        // RIGHT PAGE (ODD) - Both Across and Down clues
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
         // Top-aligned minipages for clues
@@ -304,6 +317,22 @@ impl LatexGenerator {
         }
         latex.push_str("\\end{enumerate}\n");
         latex.push_str("\\end{minipage}\n");
+        
+        // Go to next page for grid
+        latex.push_str("\\clearpage\n\n");
+        
+        // RIGHT PAGE - Grid only
+        latex.push_str("\\thispagestyle{fancy}\n\n");
+        
+        // Center grid vertically on page
+        latex.push_str("\\vspace*{\\fill}\n");
+        latex.push_str("\\begin{center}\n");
+        latex.push_str(&self.generate_grid(&puzzle.grid)?);
+        latex.push_str("\\end{center}\n");
+        latex.push_str("\\vspace*{\\fill}\n");
+        
+        // Go to next page for next puzzle
+        latex.push_str("\\clearpage\n\n");
         
         Ok(latex)
     }

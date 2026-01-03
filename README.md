@@ -150,6 +150,7 @@ cargo build --release -p crossword-cli
 **Cover Generation:**
 - `--generate-cover` - Generate KDP cover from template
 - `--cover-template` - Path to cover SVG template (type determined by --kdp-format)
+- `--subtitle` - Cover subtitle text (replaces "PUZZLES" in template)
 - `--color-interior` - Use color interior spine calculation (default: black & white)
 
 **Publishing Options:**

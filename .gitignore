@@ -17,6 +17,9 @@ Cargo.lock
 *.out
 *.toc
 *.synctex.gz
+
+# Book outputs
+*.cover.svg
 *.tex
 *.pdf
 

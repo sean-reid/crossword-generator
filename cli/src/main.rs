@@ -58,6 +58,10 @@ struct Args {
     #[arg(short, long)]
     description: Option<String>,
 
+    /// Cover subtitle (replaces "PUZZLES" in template)
+    #[arg(long)]
+    subtitle: Option<String>,
+
     /// Random seed for reproducibility
     #[arg(long)]
     seed: Option<u64>,
@@ -148,6 +152,7 @@ fn main() -> Result<()> {
     // Clone values we'll need later for cover generation
     let title_for_cover = config.title.clone();
     let author_for_cover = config.author.clone();
+    let subtitle_for_cover = args.subtitle.clone();
     let trim_size_for_cover = config.trim_size.clone();
     let kdp_format_for_cover = config.kdp_format.clone();
 
@@ -221,16 +226,16 @@ fn main() -> Result<()> {
                 cover_gen.generate_paperback_cover(
                     &template.to_string_lossy(),
                     &title_for_cover,
+                    subtitle_for_cover.as_deref().unwrap_or("PUZZLES"),
                     author_for_cover.as_deref().unwrap_or(""),
-                    book.puzzle_count(),
                     args.color_interior,
                 )?
             } else {
                 cover_gen.generate_ebook_cover(
                     &template.to_string_lossy(),
                     &title_for_cover,
+                    subtitle_for_cover.as_deref().unwrap_or("PUZZLES"),
                     author_for_cover.as_deref().unwrap_or(""),
-                    book.puzzle_count(),
                 )?
             };
             
