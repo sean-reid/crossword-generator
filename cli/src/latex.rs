@@ -250,9 +250,8 @@ impl LatexGenerator {
         latex.push_str("\\end{center}\n\n");
         
         latex.push_str("\\begin{flushleft}\n");
-        for i in 1..=puzzle_count {
-            latex.push_str(&format!("Puzzle {} \\dotfill ~\\pageref{{puzzle:{}}}\n\n", i, i));
-        }
+        latex.push_str("Introduction \\dotfill ~1\n\n");
+        latex.push_str(&format!("Puzzles (1--{}) \\dotfill ~2\n\n", puzzle_count));
         latex.push_str("Answer Key \\dotfill ~\\pageref{answerkey}\n\n");
         latex.push_str("\\end{flushleft}\n");
         latex.push_str("\\clearpage\n\n");
@@ -367,7 +366,7 @@ impl LatexGenerator {
         let mut latex = String::new();
         
         // Fixed 70% width for all puzzles to ensure they fit
-        let width_ratio = 0.95;
+        let width_ratio = 0.70;
         
         latex.push_str(&format!(
             "\\begin{{tikzpicture}}[x={{{}\\textwidth/{}}},y={{{}\\textwidth/{}}}]\n",
