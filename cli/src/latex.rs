@@ -348,12 +348,24 @@ impl LatexGenerator {
         // RIGHT PAGE - Grid only
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
+        let size = puzzle.grid.len();
+        
+        // For large grids, temporarily expand margins
+        if size >= 14 {
+            latex.push_str("\\newgeometry{top=0.5in,bottom=0.5in,inner=0.625in,outer=0.5in}\n\n");
+        }
+        
         // Center grid vertically on page
         latex.push_str("\\vspace*{\\fill}\n");
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
         latex.push_str("\\end{center}\n");
-        latex.push_str("\\vspace*{\\fill}\n");
+        latex.push_str("\\vspace*{\\fill}\n\n");
+        
+        // Restore normal margins for large grids
+        if size >= 14 {
+            latex.push_str("\\restoregeometry\n\n");
+        }
         
         // Go to next page for next puzzle
         latex.push_str("\\clearpage\n\n");
@@ -366,7 +378,7 @@ impl LatexGenerator {
         let mut latex = String::new();
         
         // Fixed 70% width for all puzzles to ensure they fit
-        let width_ratio = 0.95;
+        let width_ratio = 0.70;
         
         latex.push_str(&format!(
             "\\begin{{tikzpicture}}[x={{{}\\textwidth/{}}},y={{{}\\textwidth/{}}}]\n",
