@@ -220,8 +220,18 @@ fn main() -> Result<()> {
         if let Some(template) = args.cover_template.as_ref() {
             let is_paperback = matches!(kdp_format_for_cover, book::KdpFormat::Paperback);
             
+            // Calculate actual page count:
+            // - Front matter: ~4-6 pages (title, copyright, TOC, intro)
+            // - Each puzzle: 2 pages (clues + grid)
+            // - Answer key: puzzles/4 pages (4 per page) + any remainder
+            let puzzle_count = book.puzzle_count();
+            let front_matter = 6;
+            let puzzle_pages = puzzle_count * 2;
+            let answer_key_pages = (puzzle_count + 3) / 4; // Round up
+            let total_pages = front_matter + puzzle_pages + answer_key_pages;
+            
             let cover_gen = CoverGenerator::new(
-                book.puzzle_count() + 6,  // Add front matter pages
+                total_pages,
                 trim_size_for_cover.width,
                 trim_size_for_cover.height,
             );

@@ -2,6 +2,8 @@
 
 A crossword puzzle generator with both web (WASM) and CLI interfaces for generating LaTeX puzzle books.
 
+> **Note:** Package renamed from `crossword-wasm` to `crossword-core`. Build with `--features wasm` for web use.
+
 ## Quick Start
 
 ### Web Application
@@ -143,7 +145,7 @@ cargo build --release -p crossword-cli
 - `--compile` - Auto-compile PDF with pdflatex
 - `--allowlist` - Path to word allowlist file (default: uses wasm/clean_allowlist.txt)
 - `--kdp-format` - paperback or ebook (default: paperback)
-- `--trim-size` - Paperback size: 5x8, 5.5x8.5, 6x9, 7x10, 8x10 (default: 6x9)
+- `--trim-size` - Paperback size: 5x8, 5.5x8.5, 6x9, 7x10, 8x10 (default: 8x10)
 
 **Cover Generation:**
 - `--generate-cover` - Generate KDP cover from template
