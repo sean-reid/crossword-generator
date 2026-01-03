@@ -356,7 +356,8 @@ impl LatexGenerator {
         latex.push_str("\\end{center}\n");
         latex.push_str("\\vspace*{\\fill}\n");
         
-        // DON'T clearpage - let next puzzle title flow to next page
+        // Go to next page for next puzzle
+        latex.push_str("\\clearpage\n\n");
         
         Ok(latex)
     }
@@ -365,20 +366,8 @@ impl LatexGenerator {
         let size = grid.len();
         let mut latex = String::new();
         
-        // Dynamic sizing based on grid dimensions - more aggressive for large grids
-        let width_ratio = if size <= 10 {
-            0.70
-        } else if size <= 12 {
-            0.75
-        } else if size <= 14 {
-            0.78
-        } else if size <= 16 {
-            0.80
-        } else if size <= 18 {
-            0.75
-        } else {
-            0.70
-        };
+        // Fixed 70% width for all puzzles to ensure they fit
+        let width_ratio = 0.70;
         
         latex.push_str(&format!(
             "\\begin{{tikzpicture}}[x={{{}\\textwidth/{}}},y={{{}\\textwidth/{}}}]\n",
