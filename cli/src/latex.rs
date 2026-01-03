@@ -356,8 +356,7 @@ impl LatexGenerator {
         latex.push_str("\\end{center}\n");
         latex.push_str("\\vspace*{\\fill}\n");
         
-        // Go to next page for next puzzle
-        latex.push_str("\\clearpage\n\n");
+        // DON'T clearpage - let next puzzle title flow to next page
         
         Ok(latex)
     }
