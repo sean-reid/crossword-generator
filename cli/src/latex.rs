@@ -302,18 +302,15 @@ impl LatexGenerator {
     fn generate_puzzle_spread(&self, puzzle: &CrosswordPuzzle, number: usize) -> Result<String> {
         let mut latex = String::new();
         
-        // LEFT PAGE - Clues
+        // LEFT PAGE - Clues (top-aligned minipages)
         latex.push_str(&format!("\\label{{puzzle:{}}}\n", number));
-        latex.push_str(&format!("\\addcontentsline{{toc}}{{chapter}}{{Puzzle {}}}\n\n", number));
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
         // Title
-        latex.push_str(&format!("{{\\LARGE\\bfseries Puzzle {}}}\\n\n", number));
-        latex.push_str("\\vspace{0.3cm}\n\n");
+        latex.push_str(&format!("{{\\LARGE\\bfseries Puzzle {}}}\\\\[0.5cm]\n\n", number));
         
-        // Clues in two columns - will naturally flow to next page if too long
-        latex.push_str("\\begin{multicols}{2}\n");
-        
+        // Clues in minipages (won't overflow, but that's okay)
+        latex.push_str("\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Across}\n");
         latex.push_str("\\raggedright\n");
         latex.push_str("\\begin{enumerate}\n");
@@ -324,10 +321,10 @@ impl LatexGenerator {
                 escape_latex(&clue.clue)
             ));
         }
-        latex.push_str("\\end{enumerate}\n\n");
-        
-        latex.push_str("\\columnbreak\n\n");
-        
+        latex.push_str("\\end{enumerate}\n");
+        latex.push_str("\\end{minipage}\n");
+        latex.push_str("\\hfill\n");
+        latex.push_str("\\begin{minipage}[t]{0.48\\textwidth}\n");
         latex.push_str("\\subsection*{Down}\n");
         latex.push_str("\\raggedright\n");
         latex.push_str("\\begin{enumerate}\n");
@@ -339,19 +336,20 @@ impl LatexGenerator {
             ));
         }
         latex.push_str("\\end{enumerate}\n");
-        
-        latex.push_str("\\end{multicols}\n\n");
+        latex.push_str("\\end{minipage}\n\n");
         
         // Clear to next page for grid
         latex.push_str("\\clearpage\n\n");
         
-        // RIGHT PAGE - Grid (overflow clues will appear below automatically)
+        // RIGHT PAGE - Grid only
         latex.push_str("\\thispagestyle{fancy}\n\n");
         
-        // Grid at top
+        // Center grid
+        latex.push_str("\\vspace*{\\fill}\n");
         latex.push_str("\\begin{center}\n");
         latex.push_str(&self.generate_grid(&puzzle.grid)?);
-        latex.push_str("\\end{center}\n\n");
+        latex.push_str("\\end{center}\n");
+        latex.push_str("\\vspace*{\\fill}\n\n");
         
         // Clear to next puzzle
         latex.push_str("\\clearpage\n\n");
@@ -363,7 +361,7 @@ impl LatexGenerator {
         let size = grid.len();
         let mut latex = String::new();
         
-        // 95% width for all puzzles
+        // 95% width for maximum size
         let width_ratio = 0.95;
         
         latex.push_str(&format!(
