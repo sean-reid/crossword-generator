@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookConfig {
     pub title: String,
+    pub subtitle: Option<String>,
     pub author: Option<String>,
     pub publisher: Option<String>,
     pub edition: Option<String>,
@@ -45,6 +46,7 @@ impl BookConfig {
     pub fn new(title: String, grid_size: usize) -> Self {
         Self {
             title,
+            subtitle: None,
             author: None,
             publisher: None,
             edition: None,

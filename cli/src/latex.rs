@@ -41,11 +41,6 @@ impl LatexGenerator {
         
         // Generate puzzles with facing pages (clues on left, grid on right)
         for (idx, puzzle) in book.puzzles().iter().enumerate() {
-            // Ensure we start on a left (even) page
-            if idx > 0 {
-                latex.push_str("\\cleardoublepage\n");
-            }
-            
             latex.push_str(&self.generate_puzzle_spread(puzzle, idx + 1)?);
         }
         
@@ -87,6 +82,11 @@ impl LatexGenerator {
 \fancyhead[LE,RO]{{\thepage}}
 \renewcommand{{\headrulewidth}}{{0pt}}
 \setlength{{\headsep}}{{0.4in}}
+
+% Drop caps for introduction
+\usepackage{{lettrine}}
+\renewcommand{{\LettrineTextFont}}{{\scshape}}
+\setlength{{\DefaultNindent}}{{0pt}}
 
 % Chapter styling (no chapter numbers, cleaner look)
 \usepackage{{titlesec}}
@@ -146,9 +146,18 @@ impl LatexGenerator {
             escape_latex(&config.title)
         ));
         
-        latex.push_str("\\vspace{1cm}\n\n");
+        latex.push_str("\\vspace{0.8cm}\n\n");
         
-        // Subtitle/description
+        // Subtitle
+        if let Some(ref subtitle) = config.subtitle {
+            latex.push_str(&format!(
+                "{{\\LARGE {}}}\n\n",
+                escape_latex(subtitle)
+            ));
+            latex.push_str("\\vspace{1cm}\n\n");
+        }
+        
+        // Description
         if let Some(ref desc) = config.description {
             latex.push_str(&format!(
                 "{{\\Large\\textit{{{}}}}}\n\n",
@@ -254,7 +263,12 @@ impl LatexGenerator {
         
         latex.push_str("\\chapter*{Introduction}\n\n");
         
-        latex.push_str("Crossword puzzles have captivated minds for over a century, beginning with Arthur Wynne's \\textit{Word-Cross} puzzle published in the \\textit{New York World} on December 21, 1913. What started as a simple diamond-shaped grid has evolved into one of the world's most beloved pastimes, challenging millions of solvers daily.\n\n");
+        // Set paragraph indentation for intro only
+        latex.push_str("\\setlength{\\parindent}{1.5em}\n");
+        latex.push_str("\\setlength{\\parskip}{0.8em}\n\n");
+        
+        // First paragraph with drop cap
+        latex.push_str("\\lettrine[lines=3,lhang=0.1,loversize=0.15]{C}{rossword} puzzles have captivated minds for over a century, beginning with Arthur Wynne's \\textit{Word-Cross} puzzle published in the \\textit{New York World} on December 21, 1913. What started as a simple diamond-shaped grid has evolved into one of the world's most beloved pastimes, challenging millions of solvers daily.\n\n");
         
         latex.push_str("The beauty of a well-crafted crossword lies in the delicate balance between challenge and satisfaction. Each puzzle is a carefully constructed lattice of interlocking words, where every letter serves double duty, connecting both across and down entries. The best puzzles reward both knowledge and wordplay, offering that satisfying ``aha!'' moment when a difficult clue finally clicks.\n\n");
         
@@ -262,17 +276,24 @@ impl LatexGenerator {
         
         latex.push_str("Each puzzle is printed with the grid on the right page and clues on the left, allowing you to see both simultaneously as you solve. Take your time, work in pencil, and remember: every puzzle has a solution, and the journey to finding it is half the fun.\n\n");
         
-        latex.push_str("\\vspace{1cm}\n\n");
-        latex.push_str("Happy solving!\n\n");
+        latex.push_str("\\vspace{1.5cm}\n\n");
+        
+        // Signature
+        latex.push_str("\\noindent Happy solving!\n\n");
         
         if let Some(ref author) = config.author {
-            latex.push_str("\\vspace{0.5cm}\n\n");
-            latex.push_str("\\hfill ");
+            latex.push_str("\\vspace{0.8cm}\n\n");
+            latex.push_str("\\hfill\\textit{");
             latex.push_str(&escape_latex(author));
-            latex.push_str("\n\n");
+            latex.push_str("}\n\n");
         }
         
-        // Don't add clearpage - let next content flow to page 2
+        // Reset paragraph settings
+        latex.push_str("\\setlength{\\parindent}{0pt}\n");
+        latex.push_str("\\setlength{\\parskip}{0pt}\n\n");
+        
+        // Add clearpage to go to next page (page 2)
+        latex.push_str("\\clearpage\n\n");
         
         latex
     }

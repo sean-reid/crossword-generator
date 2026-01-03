@@ -133,6 +133,7 @@ fn main() -> Result<()> {
     println!("Dictionary loaded: {} words", stats.word_count);
 
     let mut config = BookConfig::new(args.title.clone(), args.size);
+    config.subtitle = args.subtitle.clone();
     config.author = args.author;
     config.publisher = args.publisher;
     config.edition = args.edition;
