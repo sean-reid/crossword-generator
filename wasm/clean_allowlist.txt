@@ -145840,7 +145840,6 @@ nostro
 nostrum
 nostrums
 nosy
-not
 nota
 notabilia
 notabilities
