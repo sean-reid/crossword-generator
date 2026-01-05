@@ -385,7 +385,7 @@ impl Dictionary {
         def = def.to_lowercase();
         
         // Strip any remaining em-dash + part of speech (after lowercasing)
-        if def.starts_with("—n.") || def.starts_with("—v.") || def.starts_with("—adj.") || def.starts_with("—adv.") {
+        if def.starts_with("—n.") || def.starts_with("—v.") || def.starts_with("—adj.") || def.starts_with("—adv.") || def.starts_with("—attrib. adj.") {
             // Find the space after the POS
             if let Some(space_pos) = def.find(' ') {
                 def = def[space_pos + 1..].trim().to_string();
