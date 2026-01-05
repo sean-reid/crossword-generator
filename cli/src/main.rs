@@ -34,6 +34,10 @@ struct Args {
     #[arg(long, default_value = "50")]
     density: usize,
 
+    /// Word pool size (0 = auto-calculate based on grid size)
+    #[arg(long, default_value = "0")]
+    word_pool: usize,
+
     /// Book title
     #[arg(short, long, default_value = "Crossword Puzzle Book")]
     title: String,
@@ -178,10 +182,11 @@ fn main() -> Result<()> {
     // Generate puzzles in parallel
     use rayon::prelude::*;
     let density_percent = args.density;
+    let word_pool_size = args.word_pool;
     let puzzles: Vec<_> = (0..args.count)
         .into_par_iter()
         .filter_map(|i| {
-            match generate_crossword_with_density(&dict, args.size, density_percent) {
+            match generate_crossword_with_density(&dict, args.size, density_percent, word_pool_size) {
                 Ok(puzzle) => {
                     pb.inc(1);
                     Some(puzzle)
@@ -282,7 +287,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn generate_crossword_with_density(dict: &Dictionary, size: usize, density_percent: usize) -> Result<CrosswordPuzzle> {
+fn generate_crossword_with_density(dict: &Dictionary, size: usize, density_percent: usize, word_pool_size: usize) -> Result<CrosswordPuzzle> {
     let all_words = dict.get_words();
     
     // Filter suitable words
@@ -297,18 +302,22 @@ fn generate_crossword_with_density(dict: &Dictionary, size: usize, density_perce
         by_length.entry(word.len()).or_insert_with(Vec::new).push(word);
     }
     
-    // Determine max words based on size and target density
-    let base_max_words = match size {
-        s if s <= 8 => 80,
-        s if s <= 10 => 120,
-        s if s <= 12 => 150,
-        s if s <= 15 => 130,
-        s if s <= 20 => 100,
-        _ => 100,
+    // Determine max words - use provided pool size or auto-calculate
+    let max_words = if word_pool_size > 0 {
+        word_pool_size
+    } else {
+        let base_max_words = match size {
+            s if s <= 8 => 80,
+            s if s <= 10 => 120,
+            s if s <= 12 => 150,
+            s if s <= 15 => 130,
+            s if s <= 20 => 100,
+            _ => 100,
+        };
+        
+        // Scale based on density (50% is baseline)
+        ((base_max_words as f32) * (density_percent as f32 / 50.0)) as usize
     };
-    
-    // Scale based on density (50% is baseline)
-    let max_words = ((base_max_words as f32) * (density_percent as f32 / 50.0)) as usize;
     
     let mut words = Vec::new();
     

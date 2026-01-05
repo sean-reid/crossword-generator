@@ -140,6 +140,7 @@ cargo build --release -p crossword-cli
 - `-c, --count` - Number of puzzles (default: 10)
 - `-s, --size` - Grid size (default: 16)
 - `--density` - Target density % of filled cells (default: 50)
+- `--word-pool` - Word pool size for solver (0 = auto, default: 0)
 - `-o, --output` - Output file (default: crossword_book.tex)
 - `-j, --jobs` - Parallel threads (default: CPU cores)
 - `--seed` - Random seed for reproducibility

@@ -87,7 +87,6 @@ impl Dictionary {
                     && !def_lower.starts_with("abbr.")
                     && !def_lower.contains("abbr. ")
                     && !def_lower.contains("offens.")
-                    && !def_lower.contains("comb. form")
                     && !w.ends_with('.');
                 
                 let clue = Self::extract_clue(def);
@@ -177,11 +176,10 @@ impl Dictionary {
             "adv. & adj. ",
             "& predic.adj. ",
             "& predic. adj. ",
-            "& predic.adj. ",
-            "attrib. adj. ",
-            "attrib.adj. ",
             "predic.adj. ",
             "predic. adj. ",
+            "attrib. adj. ",
+            "attrib.adj. ",
             "n.pl. ",
             "v.tr. ",
             "v.intr. ",
@@ -211,6 +209,7 @@ impl Dictionary {
                 || s.to_lowercase().starts_with("joc. ")
                 || s.to_lowercase().starts_with("aux. ")
                 || s.to_lowercase().starts_with("int. ")
+                || s.to_lowercase().starts_with("scot. & n.engl. ")
         };
         
         while style_pattern(&def) {
