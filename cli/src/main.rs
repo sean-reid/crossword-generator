@@ -298,7 +298,6 @@ fn generate_crossword_with_density(dict: &Dictionary, size: usize, density_perce
     }
     
     // Determine max words based on size and target density
-    // Higher density = more words needed
     let base_max_words = match size {
         s if s <= 8 => 80,
         s if s <= 10 => 120,

@@ -177,6 +177,7 @@ impl Dictionary {
             "adv. & adj. ",
             "& predic.adj. ",
             "& predic. adj. ",
+            "& predic.adj. ",
             "attrib. adj. ",
             "attrib.adj. ",
             "predic.adj. ",
