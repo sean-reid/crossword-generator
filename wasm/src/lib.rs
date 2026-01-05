@@ -264,7 +264,7 @@ mod wasm_interface {
     pub fn generate_crossword(size: usize, density: Option<usize>) -> Result<JsValue, JsValue> {
         use crate::debug_log;
         
-        let target_density = density.unwrap_or(50); // Default 50%
+        let target_density = density.unwrap_or(80); // Default 80%
         debug_log!("[WASM] generate_crossword: size={}, density={}%", size, target_density);
         
         let result = std::panic::catch_unwind(|| -> Result<CrosswordPuzzle, String> {
