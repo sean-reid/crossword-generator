@@ -189,6 +189,7 @@ impl Dictionary {
             "adj. ",
             "n. ",
             "v. ",
+            "v.aux.",
             "prep. ",
             "conj. "
         ] {
