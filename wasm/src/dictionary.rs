@@ -405,9 +405,9 @@ impl Dictionary {
         }
         
         // NOW check for letter enumeration with lowercase patterns
-        for letter in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'] {
-            let pattern1 = format!(". {}", letter);  // ". b", ". c", etc.
-            let pattern2 = format!(" {} ", letter);  // " b ", " c ", etc.
+        for enumerator in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] {
+            let pattern1 = format!(". {}", enumerator);  // ". b", ". c", etc.
+            let pattern2 = format!(" {} ", enumerator);  // " b ", " c ", etc.
             
             if let Some(pos) = def.find(&pattern1) {
                 def = def[..pos].to_string();
