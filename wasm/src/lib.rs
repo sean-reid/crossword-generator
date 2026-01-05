@@ -261,10 +261,11 @@ mod wasm_interface {
     }
 
     #[wasm_bindgen]
-    pub fn generate_crossword(size: usize) -> Result<JsValue, JsValue> {
+    pub fn generate_crossword(size: usize, density: Option<usize>) -> Result<JsValue, JsValue> {
         use crate::debug_log;
         
-        debug_log!("[WASM] generate_crossword: size={}", size);
+        let target_density = density.unwrap_or(50); // Default 50%
+        debug_log!("[WASM] generate_crossword: size={}, density={}%", size, target_density);
         
         let result = std::panic::catch_unwind(|| -> Result<CrosswordPuzzle, String> {
             let dict_lock = DICTIONARY.lock()
@@ -285,7 +286,7 @@ mod wasm_interface {
                 by_length.entry(word.len()).or_insert_with(Vec::new).push(word);
             }
             
-            let max_words = match size {
+            let base_max_words = match size {
             s if s <= 8 => 80,    // Reduced for speed
             s if s <= 10 => 120,  // Reduced
             s if s <= 12 => 150,  // Major reduction
@@ -293,6 +294,9 @@ mod wasm_interface {
             s if s <= 20 => 100,
                 _ => 100,
             };
+            
+            // Scale based on target density (50% is baseline)
+            let max_words = ((base_max_words as f32) * (target_density as f32 / 50.0)) as usize;
             
             let mut words = Vec::new();
             
@@ -321,7 +325,7 @@ mod wasm_interface {
             
             debug_log!("[WASM] Using {} suitable words", words.len());
             
-            let (placements, elapsed_ms, num_vars, num_clauses) = solver::solve_with_iterations(&words, size)?;
+            let (placements, elapsed_ms, num_vars, num_clauses) = solver::solve_with_iterations(&words, size, target_density)?;
             
             debug_log!("[WASM] Solved: {} placements in {}ms ({} vars, {} clauses)", 
                        placements.len(), elapsed_ms, num_vars, num_clauses);

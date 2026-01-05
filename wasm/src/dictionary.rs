@@ -86,6 +86,8 @@ impl Dictionary {
                     && !def_lower.starts_with("suffix")
                     && !def_lower.starts_with("abbr.")
                     && !def_lower.contains("abbr. ")
+                    && !def_lower.contains("offens.")
+                    && !def_lower.contains("comb. form")
                     && !w.ends_with('.');
                 
                 let clue = Self::extract_clue(def);
@@ -401,7 +403,7 @@ impl Dictionary {
         }
         
         // NOW check for letter enumeration with lowercase patterns
-        for letter in ['b', 'c', 'd', 'e'] {
+        for letter in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'] {
             let pattern1 = format!(". {}", letter);  // ". b", ". c", etc.
             let pattern2 = format!(" {} ", letter);  // " b ", " c ", etc.
             
@@ -414,14 +416,16 @@ impl Dictionary {
             }
         }
         
-        // Strip leading enumeration letter (a, b, c already lowercase)
+        // Strip leading enumeration letter (a-z lowercase)
         def = def.trim().to_string();
         if def.len() > 2 {
             let first = def.chars().next();
             let second = def.chars().nth(1);
-            if matches!(first, Some('a') | Some('b') | Some('c'))
-                && second == Some(' ') {
-                def = def[2..].trim().to_string();
+            if first.map(|c| c.is_lowercase()).unwrap_or(false) && second == Some(' ') {
+                // Check if it's a single letter (enumeration), not start of word
+                if first.map(|c| c >= 'a' && c <= 'z').unwrap_or(false) {
+                    def = def[2..].trim().to_string();
+                }
             }
         }
         
@@ -487,6 +491,17 @@ impl Dictionary {
                 def = def[..last_open].trim().to_string();
             }
         }
+        
+        // Remove punctuation marks that have spaces on both sides
+        for punct in [" . ", " , ", " ; ", " : ", " ! ", " ? "] {
+            def = def.replace(punct, " ");
+        }
+        
+        // Clean up any double spaces created
+        while def.contains("  ") {
+            def = def.replace("  ", " ");
+        }
+        def = def.trim().to_string();
         
         def
     }

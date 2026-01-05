@@ -30,6 +30,10 @@ struct Args {
     #[arg(short, long, default_value = "16")]
     size: usize,
 
+    /// Target density (% of cells filled, default: 50)
+    #[arg(long, default_value = "50")]
+    density: usize,
+
     /// Book title
     #[arg(short, long, default_value = "Crossword Puzzle Book")]
     title: String,
@@ -173,10 +177,11 @@ fn main() -> Result<()> {
 
     // Generate puzzles in parallel
     use rayon::prelude::*;
+    let density_percent = args.density;
     let puzzles: Vec<_> = (0..args.count)
         .into_par_iter()
         .filter_map(|i| {
-            match generate_crossword(&dict, args.size) {
+            match generate_crossword_with_density(&dict, args.size, density_percent) {
                 Ok(puzzle) => {
                     pb.inc(1);
                     Some(puzzle)
@@ -277,7 +282,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn generate_crossword(dict: &Dictionary, size: usize) -> Result<CrosswordPuzzle> {
+fn generate_crossword_with_density(dict: &Dictionary, size: usize, density_percent: usize) -> Result<CrosswordPuzzle> {
     let all_words = dict.get_words();
     
     // Filter suitable words
@@ -292,8 +297,9 @@ fn generate_crossword(dict: &Dictionary, size: usize) -> Result<CrosswordPuzzle>
         by_length.entry(word.len()).or_insert_with(Vec::new).push(word);
     }
     
-    // Determine max words based on size
-    let max_words = match size {
+    // Determine max words based on size and target density
+    // Higher density = more words needed
+    let base_max_words = match size {
         s if s <= 8 => 80,
         s if s <= 10 => 120,
         s if s <= 12 => 150,
@@ -301,6 +307,9 @@ fn generate_crossword(dict: &Dictionary, size: usize) -> Result<CrosswordPuzzle>
         s if s <= 20 => 100,
         _ => 100,
     };
+    
+    // Scale based on density (50% is baseline)
+    let max_words = ((base_max_words as f32) * (density_percent as f32 / 50.0)) as usize;
     
     let mut words = Vec::new();
     
@@ -328,8 +337,8 @@ fn generate_crossword(dict: &Dictionary, size: usize) -> Result<CrosswordPuzzle>
     
     words.truncate(max_words);
     
-    // Solve the crossword
-    let (placements, elapsed_ms, _num_vars, _num_clauses) = solve_with_iterations(&words, size)
+    // Solve the crossword with target density
+    let (placements, elapsed_ms, _num_vars, _num_clauses) = solve_with_iterations(&words, size, density_percent)
         .map_err(|e| anyhow::anyhow!("Solver failed: {}", e))?;
     
     // Create puzzle

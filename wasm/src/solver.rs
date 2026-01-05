@@ -11,6 +11,7 @@ use std::time::Instant;
 pub fn solve_with_iterations(
     words: &[String],
     size: usize,
+    density_percent: usize,
 ) -> Result<(Vec<Placement>, u32, usize, usize), String> {
     use crate::debug_log;
     
@@ -18,11 +19,10 @@ pub fn solve_with_iterations(
     
     // Quality target controls density
     // Quality = sum of all placed word lengths
-    // Higher target = more words = higher density
-    // Current: 40% target density (size² * 0.4)
-    let target_quality = (size * size * 4 / 10).max(20);
+    // Target quality based on desired density percentage
+    let target_quality = (size * size * density_percent / 100).max(20);
     
-    debug_log!("[SOLVER] Solving with quality={} (target ~40% density)", target_quality);
+    debug_log!("[SOLVER] Solving with quality={} (target ~{}% density)", target_quality, density_percent);
     
     let mut encoder = CrosswordEncoder::new(size);
     let (num_vars, num_clauses) = encoder.encode(words, size, target_quality)?;
