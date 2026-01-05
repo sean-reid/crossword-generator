@@ -174,6 +174,8 @@ impl Dictionary {
             "v. & n. ",
             "adj. & adv. ",
             "adv. & adj. ",
+            "adv. & predic.adj. ",
+            "adv. & predic. adj. ",
             "& predic.adj. ",
             "& predic. adj. ",
             "predic.adj. ",
