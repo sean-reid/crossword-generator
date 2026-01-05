@@ -505,6 +505,11 @@ impl Dictionary {
         }
         def = def.trim().to_string();
         
+        // Check for ampersands
+        if def.contains("&") {
+            return "Definition not available".to_string();
+        }
+        
         def
     }
     
