@@ -322,16 +322,16 @@ fn generate_crossword_with_density(dict: &Dictionary, size: usize, density_perce
     let mut words = Vec::new();
     
     // Select words with length distribution
-    for len in 3..=size.min(15) {
+    for len in 3..=size.min(16) {
         if let Some(len_words) = by_length.get_mut(&len) {
             len_words.shuffle(&mut rand::thread_rng());
             
             let proportion = if len <= 5 {
-                0.70
+                0.60
             } else if len <= 8 {
-                0.25
+                0.30
             } else {
-                0.05
+                0.10
             };
             
             let count = ((max_words as f32 * proportion) / 4.0) as usize;
