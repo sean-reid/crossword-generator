@@ -80,7 +80,7 @@ impl Dictionary {
 
         let mut entries: HashMap<String, Vec<String>> = HashMap::new();
 
-        for (word_key, entry_value) in wordset_dict.iter() {
+        for (_word_key, entry_value) in wordset_dict.iter() {
             // Skip if entry is null
             if entry_value.is_null() {
                 continue;
@@ -172,14 +172,34 @@ impl Dictionary {
                 continue;
             }
 
-            // Wordset definitions are already clean - just capitalize first letter
-            let trimmed = def.trim();
-            if trimmed.is_empty() || trimmed.len() < 10 {
+            // Remove parenthetical content (including nested parens)
+            let mut cleaned = String::new();
+            let mut depth: i32 = 0;
+            for ch in def.trim().chars() {
+                match ch {
+                    '(' => depth += 1,
+                    ')' => depth = depth.saturating_sub(1),
+                    _ => {
+                        if depth == 0 {
+                            cleaned.push(ch);
+                        }
+                    }
+                }
+            }
+            
+            // Clean up any double spaces created by removal
+            while cleaned.contains("  ") {
+                cleaned = cleaned.replace("  ", " ");
+            }
+            
+            let cleaned = cleaned.trim();
+            
+            if cleaned.is_empty() || cleaned.len() < 10 {
                 continue;
             }
 
             // Capitalize first letter
-            let mut chars = trimmed.chars();
+            let mut chars = cleaned.chars();
             if let Some(first) = chars.next() {
                 let capitalized = first.to_uppercase().collect::<String>() + chars.as_str();
                 definitions.push(capitalized);
