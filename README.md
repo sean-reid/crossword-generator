@@ -4,16 +4,29 @@ A crossword puzzle generator with both web (WASM) and CLI interfaces for generat
 
 ## Quick Start
 
+### Prerequisites
+Install [mise](https://mise.jdx.dev/) for version management:
+```bash
+curl https://mise.run | sh
+```
+
+### Setup
+```bash
+# Install pinned versions of Rust, Node.js, and wasm-pack
+mise install
+
+# Install all dependencies
+mise run install
+```
+
 ### Web Application
 ```bash
-npm install
-npm run build:wasm    # Builds with --features wasm
-npm run dev
+mise run dev
 ```
 
 ### CLI Tool
 ```bash
-cargo build --release -p crossword-cli
+mise run build-cli
 ./target/release/crossword-cli -c 10 -o book.tex
 ```
 
@@ -39,6 +52,15 @@ crossword-generator/
 └── package.json
 ```
 
+## Pinned Versions
+
+This project uses [mise](https://mise.jdx.dev/) to pin tool versions for reproducible builds:
+- **Rust**: 1.83.0
+- **Node.js**: 22.12.0
+- **wasm-pack**: 0.13.0
+
+All versions are specified in `mise.toml`. Run `mise install` to get the correct versions.
+
 ## Features
 
 - **Web App**: Interactive browser-based puzzle generation (uses built-in clean word filter)
@@ -56,23 +78,43 @@ crossword-generator/
 
 ## Building
 
-**Prerequisites**: Rust, Node.js, wasm-pack, optionally pdflatex for PDF generation
+**Prerequisites**: [mise](https://mise.jdx.dev/) for managing Rust, Node.js, and wasm-pack versions
+
+### Initial Setup
+```bash
+mise install        # Install Rust, Node.js
+mise run install    # Install wasm-pack and npm packages
+```
 
 ### Web Application
 
 ```bash
-npm install
-npm run build:wasm    # Important: builds with --features wasm
-npm run build:web
-# Or: npm run build
-npm run dev          # Development server
+mise run build-wasm      # Build WASM with --features wasm
+mise run build-web       # Build frontend
+# Or: mise run build     # Build both
+mise run dev             # Development server
+```
+
+**Debug build** (includes console logging):
+```bash
+mise run build-wasm-debug
 ```
 
 ### CLI Tool
 
 ```bash
-cargo build --release -p crossword-cli
+mise run build-cli
 # Binary at: target/release/crossword-cli
+```
+
+### Development Tasks
+
+```bash
+mise run check      # Run cargo check
+mise run clippy     # Run linter
+mise run fmt        # Format Rust code
+mise run test       # Run tests
+mise run clean      # Clean all build artifacts
 ```
 
 ## CLI Usage
