@@ -112,8 +112,8 @@ impl Dictionary {
                 }
             }
 
-            // Extract and clean definitions
-            let definitions = Self::extract_definitions(&entry.meanings);
+            // Extract and clean definitions, filtering out those containing the word
+            let definitions = Self::extract_definitions(&entry.meanings, &normalized);
             
             if !definitions.is_empty() {
                 entries.insert(normalized, definitions);
@@ -147,8 +147,10 @@ impl Dictionary {
 
     /// Extract definitions from Wordset meanings
     /// Wordset data is already clean, so minimal processing needed
-    fn extract_definitions(meanings: &[WordsetMeaning]) -> Vec<String> {
+    /// Filters out definitions that contain the word itself
+    fn extract_definitions(meanings: &[WordsetMeaning], word: &str) -> Vec<String> {
         let mut definitions = Vec::new();
+        let word_lower = word.to_lowercase();
 
         for meaning in meanings {
             // Skip if definition or speech_part is null
@@ -195,6 +197,12 @@ impl Dictionary {
             let cleaned = cleaned.trim();
             
             if cleaned.is_empty() || cleaned.len() < 10 {
+                continue;
+            }
+
+            // Skip if definition contains the word itself (case-insensitive)
+            let cleaned_lower = cleaned.to_lowercase();
+            if cleaned_lower.contains(&word_lower) {
                 continue;
             }
 
