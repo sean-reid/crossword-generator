@@ -29,7 +29,7 @@ crossword-generator/
 │   │   ├── encoder.rs
 │   │   ├── solver.rs
 │   │   └── solution.rs
-│   └── Oxford_English_Dictionary.txt
+│   └── wordset/            # WordSet dictionary data
 ├── cli/                    # Native CLI for LaTeX generation
 │   └── src/
 │       ├── main.rs
@@ -52,7 +52,7 @@ crossword-generator/
 - **Publishing Ready**: Customizable title page with author, ISBN, publisher info
 - **Custom Graphics**: Embed SVG cover art and decorations
 - **SAT Solving**: Uses Boolean satisfiability for optimal word placement
-- **Oxford Dictionary**: 100k+ words with definitions
+- **WordSet Dictionary**: Comprehensive word definitions from the open-source [WordSet project](https://github.com/wordset/wordset-dictionary)
 
 ## Building
 
@@ -164,7 +164,7 @@ cargo build --release -p crossword-cli
 
 ## How It Works
 
-1. **Dictionary**: Parses Oxford English Dictionary (100k+ words)
+1. **Dictionary**: Uses WordSet dictionary data with comprehensive definitions
 2. **Parallel Generation**: Uses rayon to generate multiple puzzles simultaneously across CPU cores
 3. **SAT Encoding**: Converts crossword constraints to Boolean formulas
 4. **SAT Solving**: Uses Varisat solver to find valid word placements
