@@ -1,6 +1,6 @@
-use varisat::solver::Solver;
 use crate::encoder::CrosswordEncoder;
 use crate::solution::Placement;
+use varisat::solver::Solver;
 
 #[cfg(feature = "wasm")]
 use web_time::Instant;
@@ -14,39 +14,48 @@ pub fn solve_with_iterations(
     density_percent: usize,
 ) -> Result<(Vec<Placement>, u32, usize, usize), String> {
     use crate::debug_log;
-    
+
     let start = Instant::now();
-    
+
     // Quality target controls density
     // Quality = sum of all placed word lengths
     // Target quality based on desired density percentage
     let target_quality = (size * size * density_percent / 100).max(20);
-    
-    debug_log!("[SOLVER] Solving with quality={} (target ~{}% density)", target_quality, density_percent);
-    
+
+    debug_log!(
+        "[SOLVER] Solving with quality={} (target ~{}% density)",
+        target_quality,
+        density_percent
+    );
+
     let mut encoder = CrosswordEncoder::new(size);
     let (num_vars, num_clauses) = encoder.encode(words, size, target_quality)?;
-    
+
     let _encoding_time = start.elapsed().as_millis() as u32;
-    debug_log!("[SOLVER] Encoded in {}ms: {} vars, {} clauses", _encoding_time, num_vars, num_clauses);
-    
+    debug_log!(
+        "[SOLVER] Encoded in {}ms: {} vars, {} clauses",
+        _encoding_time,
+        num_vars,
+        num_clauses
+    );
+
     // Estimate solve time based on actual observations
     // Real data: 333k vars = 28.4s solve
     // Use 0.085ms per var (matches observed data)
     let _estimated_solve_ms = ((num_vars as f32 * 0.085) as u32).max(3000);
     debug_log!("[SOLVER] Estimated solve time: {}ms", _estimated_solve_ms);
-    
+
     let mut solver = Solver::new();
     solver.add_formula(encoder.get_formula());
-    
+
     debug_log!("[SOLVER] Starting SAT solver...");
-    
+
     match solver.solve() {
         Ok(true) => {
             if let Some(model) = solver.model() {
                 let placements = encoder.extract_placements(&model);
                 let elapsed = start.elapsed().as_millis() as u32;
-                
+
                 if placements.is_empty() {
                     Err("No placements found".to_string())
                 } else {
@@ -64,20 +73,20 @@ pub fn solve_with_iterations(
 
 pub fn solve_encoded(encoder: CrosswordEncoder) -> Result<(Vec<Placement>, u32), String> {
     use crate::debug_log;
-    
+
     let start = Instant::now();
-    
+
     debug_log!("[SOLVER] Solving encoded problem...");
-    
+
     let mut solver = Solver::new();
     solver.add_formula(encoder.get_formula());
-    
+
     match solver.solve() {
         Ok(true) => {
             if let Some(model) = solver.model() {
                 let placements = encoder.extract_placements(&model);
                 let elapsed = start.elapsed().as_millis() as u32;
-                
+
                 if placements.is_empty() {
                     Err("No placements found".to_string())
                 } else {

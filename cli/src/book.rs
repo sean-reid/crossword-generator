@@ -1,5 +1,5 @@
 use crossword_core::CrosswordPuzzle;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookConfig {
@@ -32,12 +32,30 @@ pub struct TrimSize {
 impl TrimSize {
     pub fn from_string(s: &str) -> anyhow::Result<Self> {
         match s {
-            "5x8" => Ok(TrimSize { width: 5.0, height: 8.0 }),
-            "5.5x8.5" => Ok(TrimSize { width: 5.5, height: 8.5 }),
-            "6x9" => Ok(TrimSize { width: 6.0, height: 9.0 }),
-            "7x10" => Ok(TrimSize { width: 7.0, height: 10.0 }),
-            "8x10" => Ok(TrimSize { width: 8.0, height: 10.0 }),
-            _ => anyhow::bail!("Invalid trim size: {}. Use 5x8, 5.5x8.5, 6x9, 7x10, or 8x10", s),
+            "5x8" => Ok(TrimSize {
+                width: 5.0,
+                height: 8.0,
+            }),
+            "5.5x8.5" => Ok(TrimSize {
+                width: 5.5,
+                height: 8.5,
+            }),
+            "6x9" => Ok(TrimSize {
+                width: 6.0,
+                height: 9.0,
+            }),
+            "7x10" => Ok(TrimSize {
+                width: 7.0,
+                height: 10.0,
+            }),
+            "8x10" => Ok(TrimSize {
+                width: 8.0,
+                height: 10.0,
+            }),
+            _ => anyhow::bail!(
+                "Invalid trim size: {}. Use 5x8, 5.5x8.5, 6x9, 7x10, or 8x10",
+                s
+            ),
         }
     }
 }
@@ -56,7 +74,10 @@ impl BookConfig {
             grid_size,
             puzzles_per_page: 1,
             kdp_format: KdpFormat::Paperback,
-            trim_size: TrimSize { width: 8.0, height: 10.0 },
+            trim_size: TrimSize {
+                width: 8.0,
+                height: 10.0,
+            },
         }
     }
 }

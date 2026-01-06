@@ -1,5 +1,37 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+// Note: This module uses `rand` for random definition selection.
+// Make sure `rand` is included in Cargo.toml dependencies.
+
+// Wordset JSON structure
+#[derive(Debug, Deserialize)]
+struct WordsetMeaning {
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(default)]
+    def: Option<String>,
+    #[serde(default)]
+    example: Option<String>,
+    #[serde(default)]
+    speech_part: Option<String>,
+    #[serde(default)]
+    synonyms: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct WordsetEntry {
+    #[serde(default)]
+    word: Option<String>,
+    #[serde(default)]
+    wordset_id: Option<String>,
+    #[serde(default)]
+    meanings: Vec<WordsetMeaning>,
+    #[serde(default)]
+    editors: Vec<String>,
+    #[serde(default)]
+    contributors: Vec<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DictionaryStats {
@@ -9,7 +41,9 @@ pub struct DictionaryStats {
 }
 
 pub struct Dictionary {
-    entries: HashMap<String, String>,
+    /// Maps uppercase word -> list of clean definitions
+    entries: HashMap<String, Vec<String>>,
+    /// Filtered list of valid crossword words (uppercase)
     words: Vec<String>,
 }
 
@@ -17,11 +51,12 @@ impl Dictionary {
     pub fn new() -> Self {
         Self::with_allowlist(None)
     }
-    
+
+    /// Load dictionary from embedded all_words.json with optional allowlist filtering
     pub fn with_allowlist(allowlist: Option<&str>) -> Self {
-        let dict_text = include_str!("../Oxford_English_Dictionary.txt");
-        let mut entries = HashMap::new();
-        
+        // Load the embedded JSON
+        let json_text = include_str!("../all_words.json");
+
         // Parse allowlist if provided
         let allowed_words: Option<std::collections::HashSet<String>> = allowlist.map(|list| {
             list.lines()
@@ -29,601 +64,296 @@ impl Dictionary {
                 .filter(|line| !line.is_empty() && line.chars().all(|c| c.is_ascii_alphabetic()))
                 .collect()
         });
-        
-        for line in dict_text.lines() {
-            let trimmed = line.trim();
-            if trimmed.is_empty() {
+
+        // Parse JSON - use serde_json::Value for more robust handling
+        let json_value: serde_json::Value =
+            serde_json::from_str(json_text).expect("Failed to parse all_words.json");
+
+        let wordset_dict = match json_value.as_object() {
+            Some(obj) => obj,
+            None => panic!("all_words.json root is not an object"),
+        };
+
+        let mut entries: HashMap<String, Vec<String>> = HashMap::new();
+
+        for (word_key, entry_value) in wordset_dict.iter() {
+            // Skip if entry is null
+            if entry_value.is_null() {
                 continue;
             }
-            
-            if let Some(first_char) = trimmed.chars().next() {
-                if first_char.is_uppercase() && first_char.is_alphabetic() {
-                    let parts: Vec<&str> = trimmed.splitn(2, "  ").collect();
-                    
-                    if parts.len() == 2 {
-                        let word = parts[0].trim();
-                        let definition = parts[1].trim();
-                        
-                        if !word.is_empty() && word.chars().all(|c| c.is_alphabetic() || c == '-') {
-                            let mut word_clean = word.replace("-", "");
-                            word_clean = word_clean.trim_end_matches(|c: char| c.is_ascii_digit()).to_string();
-                            
-                            if !word_clean.is_empty() {
-                                let def_lower = definition.to_lowercase();
-                                let is_reference = def_lower.starts_with("var. of")
-                                    || def_lower.starts_with("variant of")
-                                    || def_lower.starts_with("see ")
-                                    || def_lower.starts_with("= ")
-                                    || def_lower.starts_with("of *")
-                                    || (def_lower.starts_with("of ") && def_lower.contains("*"));
-                                
-                                if !is_reference {
-                                    let word_upper = word_clean.to_uppercase();
-                                    // Check allowlist if provided
-                                    if let Some(ref allowed) = allowed_words {
-                                        if allowed.contains(&word_upper) {
-                                            entries.insert(word_upper, definition.to_string());
-                                        }
-                                    } else {
-                                        entries.insert(word_upper, definition.to_string());
-                                    }
-                                }
-                            }
-                        }
-                    }
+
+            // Try to deserialize this entry
+            let entry: WordsetEntry = match serde_json::from_value(entry_value.clone()) {
+                Ok(e) => e,
+                Err(_) => continue, // Skip malformed entries
+            };
+
+            // Get the word, skip if null
+            let word = match &entry.word {
+                Some(w) => w,
+                None => continue,
+            };
+
+            // Normalize word: uppercase, remove hyphens/spaces
+            let normalized = Self::normalize_word(word);
+
+            if normalized.is_empty() {
+                continue;
+            }
+
+            // Check allowlist
+            if let Some(ref allowed) = allowed_words {
+                if !allowed.contains(&normalized) {
+                    continue;
                 }
             }
+
+            // Extract and clean definitions
+            let definitions = Self::extract_definitions(&entry.meanings);
+
+            if !definitions.is_empty() {
+                entries.insert(normalized, definitions);
+            }
         }
-        
+
+        // Filter to valid crossword words with clean clues
         let words: Vec<String> = entries
             .iter()
-            .filter(|(w, def)| {
-                let len = w.len();
-                let valid_word = len >= 3 && len <= 15 && w.chars().all(|c| c.is_ascii_alphabetic());
-                
-                let def_lower = def.to_lowercase();
-                let not_special = !def_lower.starts_with("prefix")
-                    && !def_lower.starts_with("suffix")
-                    && !def_lower.starts_with("abbr.")
-                    && !def_lower.contains("abbr. ")
-                    && !def_lower.contains("offens.")
-                    && !w.ends_with('.');
-                
-                let clue = Self::extract_clue(def);
-                let clean_clue = clue != "Definition not available" 
-                    && !clue.to_lowercase().contains(&w.to_lowercase())
-                    && clue.len() > 10
-                    && !clue.to_lowercase().starts_with("of ")
-                    && !clue.contains(") ")
-                    && !clue.ends_with(")")
-                    && !clue.contains("*");
-                
-                valid_word && not_special && clean_clue
+            .filter(|(word, defs)| {
+                let len = word.len();
+                let valid_length = len >= 3 && len <= 15;
+                let valid_chars = word.chars().all(|c| c.is_ascii_alphabetic());
+                let has_clean_clue = Self::get_random_definition(defs).is_some();
+
+                valid_length && valid_chars && has_clean_clue
             })
             .map(|(w, _)| w.clone())
             .collect();
-        
+
         Dictionary { entries, words }
     }
-    
+
+    /// Normalize a word for lookup: uppercase, strip hyphens/spaces
+    fn normalize_word(word: &str) -> String {
+        word.chars()
+            .filter(|c| c.is_ascii_alphabetic())
+            .collect::<String>()
+            .to_uppercase()
+    }
+
+    /// Extract and clean definitions from Wordset meanings
+    fn extract_definitions(meanings: &[WordsetMeaning]) -> Vec<String> {
+        let mut definitions = Vec::new();
+
+        for meaning in meanings {
+            // Skip if definition or speech_part is null
+            let def = match &meaning.def {
+                Some(d) => d,
+                None => continue,
+            };
+
+            let speech_part = match &meaning.speech_part {
+                Some(sp) => sp,
+                None => continue,
+            };
+
+            // Skip certain parts of speech that aren't good for crosswords
+            let pos_lower = speech_part.to_lowercase();
+            if pos_lower.contains("prefix")
+                || pos_lower.contains("suffix")
+                || pos_lower.contains("combining form")
+                || pos_lower.contains("abbreviation")
+            {
+                continue;
+            }
+
+            // Clean the definition
+            let cleaned = Self::clean_definition(def);
+
+            // Quality check
+            if cleaned.len() >= 10 && !cleaned.contains("Definition not available") {
+                definitions.push(cleaned);
+            }
+        }
+
+        definitions
+    }
+
+    /// Clean a single definition for use as a crossword clue
+    fn clean_definition(def: &str) -> String {
+        if def.trim().is_empty() {
+            return "Definition not available".to_string();
+        }
+
+        let mut cleaned = def.trim().to_string();
+
+        // Remove control characters (except whitespace)
+        cleaned = cleaned
+            .chars()
+            .filter(|c| !c.is_control() || c.is_whitespace())
+            .collect::<String>();
+
+        // Expand common abbreviations
+        let abbreviations = [
+            ("e.g.", "for example"),
+            ("i.e.", "that is"),
+            ("esp.", "especially"),
+            ("usu.", "usually"),
+            ("colloq.", "colloquially"),
+            ("sl.", "slang"),
+            ("obs.", "obsolete"),
+            ("archit.", "architecture"),
+            ("biol.", "biology"),
+            ("chem.", "chemistry"),
+            ("geom.", "geometry"),
+            ("math.", "mathematics"),
+            ("naut.", "nautical"),
+            ("med.", "medical"),
+            ("mus.", "music"),
+            ("hist.", "historical"),
+            ("lit.", "literally"),
+        ];
+
+        for (abbr, expansion) in &abbreviations {
+            // Replace with proper spacing
+            let with_space = format!(" {} ", abbr);
+            let expanded = format!(" {} ", expansion);
+            cleaned = cleaned.replace(&with_space, &expanded);
+
+            // Handle start of string
+            if cleaned.starts_with(abbr) {
+                cleaned = format!("{}{}", expansion, &cleaned[abbr.len()..]);
+            }
+
+            // Handle end of string
+            if cleaned.ends_with(abbr) {
+                let new_end = cleaned.len() - abbr.len();
+                cleaned = format!("{}{}", &cleaned[..new_end], expansion);
+            }
+        }
+
+        // Remove parenthetical content and what follows
+        if let Some(paren_pos) = cleaned.find('(') {
+            cleaned = cleaned[..paren_pos].trim().to_string();
+        }
+
+        // Remove "see also" type references
+        let lower = cleaned.to_lowercase();
+        for cutoff in ["see ", "cf. ", "compare ", "see also ", "also called "] {
+            if let Some(pos) = lower.find(cutoff) {
+                cleaned = cleaned[..pos].trim().to_string();
+                break;
+            }
+        }
+
+        // Convert to lowercase for processing
+        cleaned = cleaned.to_lowercase();
+
+        // Remove leading "to " for verbs
+        if cleaned.starts_with("to ") && cleaned.len() > 3 {
+            cleaned = cleaned[3..].to_string();
+        }
+
+        // Remove trailing "etc" variants
+        for ending in [" etc.", " etc", ", etc.", ", etc"] {
+            if cleaned.ends_with(ending) {
+                cleaned = cleaned[..cleaned.len() - ending.len()].trim().to_string();
+            }
+        }
+
+        // Clean up multiple spaces
+        while cleaned.contains("  ") {
+            cleaned = cleaned.replace("  ", " ");
+        }
+
+        cleaned = cleaned.trim().to_string();
+
+        // Remove trailing punctuation
+        cleaned = cleaned
+            .trim_end_matches(&['.', ',', ';', ':', '!', '?'][..])
+            .to_string();
+
+        // Minimum length check
+        if cleaned.len() < 10 {
+            return "Definition not available".to_string();
+        }
+
+        // Capitalize first letter
+        let mut chars = cleaned.chars();
+        if let Some(first) = chars.next() {
+            cleaned = first.to_uppercase().collect::<String>() + chars.as_str();
+        }
+
+        cleaned
+    }
+
+    /// Get a random definition from a list of definitions
+    /// Filters for quality but returns a random one for variety in crosswords
+    #[cfg(feature = "wasm")]
+    fn get_random_definition(definitions: &[String]) -> Option<String> {
+        use rand::seq::SliceRandom;
+
+        let filtered: Vec<&String> = definitions
+            .iter()
+            .filter(|d| {
+                // Exclude definitions with certain patterns
+                let lower = d.to_lowercase();
+                !lower.contains("offensive")
+                    && !lower.contains("derogatory")
+                    && !lower.contains("slang for")
+                    && !lower.contains("vulgar")
+                    && d.len() >= 10
+                    && d.len() <= 150 // Prefer concise definitions
+            })
+            .collect();
+
+        filtered
+            .choose(&mut rand::thread_rng())
+            .map(|s| (*s).clone())
+    }
+
+    /// Get a random definition from a list of definitions (non-WASM version)
+    #[cfg(not(feature = "wasm"))]
+    fn get_random_definition(definitions: &[String]) -> Option<String> {
+        use rand::seq::SliceRandom;
+
+        let filtered: Vec<&String> = definitions
+            .iter()
+            .filter(|d| {
+                // Exclude definitions with certain patterns
+                let lower = d.to_lowercase();
+                !lower.contains("offensive")
+                    && !lower.contains("derogatory")
+                    && !lower.contains("slang for")
+                    && !lower.contains("vulgar")
+                    && d.len() >= 10
+                    && d.len() <= 150 // Prefer concise definitions
+            })
+            .collect();
+
+        filtered
+            .choose(&mut rand::thread_rng())
+            .map(|s| (*s).clone())
+    }
+
     pub fn get_words(&self) -> &[String] {
         &self.words
     }
-    
+
+    /// Get a crossword clue for a word
+    ///
+    /// Returns a random valid definition for variety, or "Definition not available"
     pub fn get_clue(&self, word: &str) -> String {
         let word_upper = word.to_uppercase();
-        if let Some(def) = self.entries.get(&word_upper) {
-            #[cfg(feature = "debug")]
-            {
-                if def.contains(". b") || def.contains(" b ") {
-                    web_sys::console::log_1(&format!("[DICT] get_clue {}: RAW='{}'", word_upper, def).into());
-                }
-            }
-            
-            let clue = Self::extract_clue(def);
-            
-            #[cfg(feature = "debug")]
-            {
-                if clue.contains(" b ") || clue.contains(". b") {
-                    web_sys::console::log_1(&format!("[DICT] WARN {}: FINAL='{}'", word_upper, clue).into());
-                }
-            }
-            clue
+
+        if let Some(definitions) = self.entries.get(&word_upper) {
+            Self::get_random_definition(definitions)
+                .unwrap_or_else(|| "Definition not available".to_string())
         } else {
             "Definition not available".to_string()
         }
     }
-    
-    fn extract_clue(definition: &str) -> String {
-        #[cfg(feature = "debug")]
-        {
-            if definition.contains(". b ") {
-                web_sys::console::log_1(&format!("[DICT] extract_clue START with '. b': {}", definition).into());
-            }
-        }
-        
-        if definition.trim().is_empty() {
-            return "Definition not available".to_string();
-        }
-        
-        let mut def = definition.trim().to_string();
-        
-        // Remove control characters immediately (except whitespace)
-        def = def.chars().filter(|c| !c.is_control() || c.is_whitespace()).collect::<String>();
-        
-        // EXPAND ABBREVIATIONS FIRST - before any splitting or enumeration handling
-        let abbreviations = [
-            (" esp. ", " especially "),
-            (" usu. ", " usually "),
-            (" e.g. ", " for example "),
-            (" i.e. ", " that is "),
-            (" colloq. ", " colloquially "),
-            (" archit. ", " architecture "),
-            (" biol. ", " biology "),
-            (" chem. ", " chemistry "),
-            (" geom. ", " geometry "),
-            (" gram. ", " grammar "),
-            (" math. ", " mathematics "),
-            (" naut. ", " nautical "),
-            (" astron. ", " astronomy "),
-            (" poet. ", " poetic "),
-            (" rhet. ", " rhetoric "),
-            (" sl. ", " slang "),
-            (" theol. ", " theology "),
-            (" zool. ", " zoology "),
-            (" physiol. ", " physiology "),
-            (" bot. ", " botany "),
-            (" eccl. ", " ecclesiastical "),
-            (" psychol. ", " psychology "),
-            (" sociol. ", " sociology "),
-            (" med. ", " medical "),
-            (" mus. ", " music "),
-            (" philos. ", " philosophy "),
-            (" archaeol. ", " archaeology "),
-            (" astrol. ", " astrology "),
-            (" anat. ", " anatomy "),
-            (" geog. ", " geography "),
-            (" geol. ", " geology "),
-            (" hist. ", " historical "),
-            (" myth. ", " mythology "),
-            (" pros. ", " prosody "),
-            (" relig. ", " religion "),
-            (" sc. ", " science "),
-            (" disp. ", " disputed "),
-            (" obs. ", " obsolete "),
-            (" etc. ", " et cetera "),
-            (" propr. ", " proprietary "),
-            (" attrib. ", " attributive "),
-            (" predic. ", " predicative "),
-        ];
-        
-        for (abbr, expansion) in &abbreviations {
-            def = def.replace(abbr, expansion);
-        }
-        
-        // Handle "etc." specially - often followed by important info
-        // Replace "etc." with "and similar" if followed by content, otherwise remove
-        let lower = def.to_lowercase();
-        if let Some(etc_pos) = lower.find(" etc.") {
-            let after_etc = etc_pos + 5; // length of " etc."
-            if after_etc < def.len() {
-                let rest = &def[after_etc..].trim();
-                if !rest.is_empty() && rest.chars().next().map(|c| c.is_alphabetic()).unwrap_or(false) {
-                    // There's more content after etc., keep it
-                    def = format!("{} and similar{}", &def[..etc_pos], &def[after_etc..]);
-                } else {
-                    // Nothing important after, just remove etc.
-                    def = format!("{}{}", &def[..etc_pos], &def[after_etc..]);
-                }
-            } else {
-                // etc. is at the end, remove it
-                def = def[..etc_pos].to_string();
-            }
-        }
-        
-        // Handle "etc" without period at end
-        if def.to_lowercase().ends_with(" etc") {
-            def = def[..def.len() - 4].trim().to_string();
-        }
-        
-        def = def.trim().to_string();
-        
-        // Remove style labels
-        for label in &["literary ", "formal ", "archaic "] {
-            if def.to_lowercase().starts_with(label) {
-                def = def[label.len()..].to_string();
-            }
-        }
-        
-        // Handle em-dash + part of speech
-        if def.starts_with('—') || def.starts_with('–') || def.starts_with("--") {
-            if let Some(period_pos) = def.find(". ") {
-                def = def[period_pos + 2..].to_string();
-            }
-        }
-        
-        // Remove part of speech at start - handle compound forms
-        for marker in &[
-            "prep. & conj. ",
-            "n. & adj. ",
-            "adj. & n. ",
-            "n. & v. ",
-            "v. & n. ",
-            "adj. & adv. ",
-            "adv. & adj. ",
-            "& predic.adj. ",
-            "& predic. adj. ",
-            "predic.adj. ",
-            "predic. adj. ",
-            "attrib. adj. ",
-            "attrib.adj. ",
-            "n.pl. ",
-            "v.tr. ",
-            "v.intr. ",
-            "adv. ",
-            "adj. ",
-            "n. ",
-            "v. ",
-            "prep. ",
-            "conj. "
-        ] {
-            if def.to_lowercase().starts_with(marker) {
-                def = def[marker.len()..].to_string();
-                break;
-            }
-        }
-        
-        def = def.trim().to_string();
-        
-        // Remove stylistic markers after POS (Poet., archaic, literary, etc.)
-        let style_pattern = |s: &str| {
-            let lower = s.to_lowercase();
-            lower.starts_with("poet. ")
-                || lower.starts_with("archaic ")
-                || lower.starts_with("literary ")
-                || lower.starts_with("formal ")
-                || lower.starts_with("colloq. ")
-                || lower.starts_with("derog. ")
-                || lower.starts_with("joc. ")
-                || lower.starts_with("aux. ")
-                || lower.starts_with("int. ")
-                || lower.starts_with("scot. & n.engl. ")
-        };
-        
-        while style_pattern(&def) {
-            if let Some(space_pos) = def.find(' ') {
-                def = def[space_pos + 1..].trim().to_string();
-            } else {
-                break;
-            }
-        }
-        
-        // Remove "or" connectors after style markers
-        if def.to_lowercase().starts_with("or ") {
-            def = def[3..].trim().to_string();
-        }
-        
-        // Remove plural/conjugation notes at start
-        if def.starts_with('(') && def.len() > 3 {
-            if let Some(close) = def.find(')') {
-                if close < 25 {
-                    def = def[close + 1..].trim().to_string();
-                }
-            }
-        }
-        
-        // Extract first numbered definition
-        // Pattern: "1 definition" or "Comb. form 1 definition"
-        // But NOT: "19th century" (digit not followed by space)
-        def = def.trim().to_string();
-        
-        // Find first occurrence of digit followed by space
-        if let Some(pos) = def.find(|c: char| c.is_ascii_digit()) {
-            // Check if this digit is followed by a space
-            if pos + 1 < def.len() && def.chars().nth(pos + 1) == Some(' ') {
-                // It's a numbered definition - skip everything up to and including the digit and space
-                def = def[pos + 2..].trim().to_string();
-            }
-            // Otherwise leave it (like "19th")
-        }
-        
-        // Second pass: check again for leading numbers after other cleanup
-        // This handles cases like "1 (usu. Predic.) not in good health"
-        def = def.trim().to_string();
-        if let Some(first_char) = def.chars().next() {
-            if first_char.is_ascii_digit() {
-                if let Some(space_pos) = def.find(' ') {
-                    def = def[space_pos + 1..].trim().to_string();
-                }
-            }
-        }
-        
-        // Remove usage labels
-        for label in &["colloq. ", "esp. ", "usu. ", "aux. ", "int. "] {
-            while def.to_lowercase().starts_with(label) {
-                def = def[label.len()..].to_string();
-            }
-        }
-        
-        // Third pass: one more check for leading numbers after all label cleanup
-        def = def.trim().to_string();
-        if let Some(first_char) = def.chars().next() {
-            if first_char.is_ascii_digit() {
-                if def.len() > 2 && def.chars().nth(1) == Some(' ') {
-                    def = def[2..].trim().to_string();
-                }
-            }
-        }
-        
-        // Remove usage parentheticals
-        if def.starts_with('(') {
-            if let Some(close) = def.find(')') {
-                let content = &def[1..close].to_lowercase();
-                if content.contains("foll") || content.contains("usu") || content.contains("often") {
-                    def = def[close + 1..].trim().to_string();
-                }
-            }
-        }
-        
-        // Remove secondary em-dash definitions
-        if let Some(pos) = def.find(" —") {
-            def = def[..pos].trim().to_string();
-        }
-        
-        // Stop at next numbered definition
-        let mut search_pos = 0;
-        while let Some(period_pos) = def[search_pos..].find(". ") {
-            let abs_pos = search_pos + period_pos;
-            let after_period = &def[abs_pos + 2..];
-            
-            if after_period.chars().next().map_or(false, |c| c.is_ascii_digit()) {
-                def = def[..abs_pos].to_string();
-                break;
-            }
-            search_pos = abs_pos + 2;
-        }
-        
-        // Remove parentheticals
-        let mut iter = 0;
-        while let Some(open) = def.find('(') {
-            if iter > 3 { break; }
-            iter += 1;
-            
-            if let Some(close) = def[open..].find(')') {
-                let before = def[..open].trim();
-                let after = def[open + close + 1..].trim();
-                def = if before.is_empty() {
-                    after.to_string()
-                } else if after.is_empty() {
-                    before.to_string()
-                } else {
-                    format!("{} {}", before, after)
-                };
-            } else {
-                break;
-            }
-        }
-        
-        // Split on semicolon
-        def = def.split("; ").next().unwrap_or(&def).trim().to_string();
-        
-        // Remove etymology
-        if let Some(pos) = def.rfind('[') {
-            def = def[..pos].trim().to_string();
-        }
-        
-        // Remove trailing POS
-        for suffix in &[" n. & adj", " adj. & n", " n. & v", " v. & n", " adj. & adv", " adv. & adj"] {
-            if def.to_lowercase().ends_with(suffix) {
-                def = def[..def.len() - suffix.len()].trim().to_string();
-                break;
-            }
-        }
-        
-        // Remove trailing single-word POS
-        if let Some(last_space) = def.rfind(' ') {
-            let after_space = &def[last_space + 1..];
-            if after_space == "adj" || after_space == "adv" || after_space == "n" || after_space == "v" {
-                def = def[..last_space].trim().to_string();
-            }
-        }
-        
-        // Remove derivative forms at end
-        loop {
-            let original_len = def.len();
-            let parts: Vec<&str> = def.rsplitn(3, ' ').collect();
-            if parts.len() >= 2 {
-                let last = parts[0].trim_end_matches('.');
-                if ["adj", "adv", "n", "v", "prep", "conj", "pron"].contains(&last) {
-                    let mut words: Vec<&str> = def.split_whitespace().collect();
-                    if words.len() >= 2 {
-                        words.truncate(words.len() - 2);
-                        def = words.join(" ");
-                    }
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-            if def.len() >= original_len {
-                break;
-            }
-        }
-        
-        def = def.trim_end_matches('.').trim().to_string();
-        
-        if def.len() < 3 {
-            return "Definition not available".to_string();
-        }
-        
-        // Lowercase FIRST so pattern matching works on capital letters too
-        def = def.to_lowercase();
-        
-        // Strip any remaining em-dash + part of speech (after lowercasing)
-        if def.starts_with("—n.") || def.starts_with("—v.") || def.starts_with("—adj.") || def.starts_with("—adv.") {
-            // Find the space after the POS
-            if let Some(space_pos) = def.find(' ') {
-                def = def[space_pos + 1..].trim().to_string();
-            } else {
-                // No content after POS
-                return "Definition not available".to_string();
-            }
-        }
-        
-        // If what remains is just labels with no content, reject it
-        if def.starts_with("colloq") || def.starts_with("especially") || def.starts_with("usually") {
-            return "Definition not available".to_string();
-        }
-        
-        // Don't reject definitions after expansion - they're now complete words
-        // Only reject if truly too short
-        if def.len() < 10 {
-            return "Definition not available".to_string();
-        }
-        
-        // SMARTER ENUMERATION DETECTION
-        // Check for letter/number enumeration - but avoid false positives
-        for enumerator in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '2', '3', '4', '5', '6', '7', '8', '9'] {
-            let pattern1 = format!(". {}", enumerator);  // ". b", ". c", etc.
-            
-            if let Some(pos) = def.find(&pattern1) {
-                // Check if the character after the enumerator is a space or end of string
-                let check_pos = pos + pattern1.len();
-                if check_pos >= def.len() || def.chars().nth(check_pos) == Some(' ') {
-                    def = def[..pos].to_string();
-                    break;
-                }
-            }
-            
-            // Only check " b ", " c " pattern for single letters, not numbers
-            if enumerator.is_alphabetic() {
-                let pattern2 = format!(" {} ", enumerator);
-                if let Some(pos) = def.find(&pattern2) {
-                    // Make sure this looks like an enumeration, not part of a phrase
-                    // Check if preceded by period or semicolon
-                    let looks_like_enum = pos == 0 || 
-                        def[..pos].ends_with('.') || 
-                        def[..pos].ends_with(';');
-                    if looks_like_enum {
-                        def = def[..pos].to_string();
-                        break;
-                    }
-                }
-            }
-        }
-        
-        // Strip leading enumeration letter (a-z lowercase)
-        def = def.trim().to_string();
-        if def.len() > 2 {
-            let first = def.chars().next();
-            let second = def.chars().nth(1);
-            if first.map(|c| c.is_lowercase()).unwrap_or(false) && second == Some(' ') {
-                // Check if it's a single letter (enumeration), not start of word
-                if first.map(|c| c >= 'a' && c <= 'z').unwrap_or(false) {
-                    def = def[2..].trim().to_string();
-                }
-            }
-        }
-        
-        def = def.trim().to_string();
-        
-        if def.len() < 3 {
-            return "Definition not available".to_string();
-        }
-        
-        // Capitalize first letter only
-        let mut chars = def.chars();
-        if let Some(first) = chars.next() {
-            def = first.to_uppercase().collect::<String>() + chars.as_str();
-        } else {
-            return "Definition not available".to_string();
-        }
-        
-        // Strip leading POS that got capitalized
-        for marker in ["N.", "V.", "Adj.", "Adv.", "Prep.", "Conj.", "& predic.adj.", "& predic. adj."] {
-            if def.starts_with(marker) {
-                def = def[marker.len()..].to_string();
-                let mut chars = def.chars();
-                if let Some(first) = chars.next() {
-                    def = first.to_uppercase().collect::<String>() + chars.as_str();
-                }
-                break;
-            }
-        }
-        
-        // Final pass: one last check for any remaining leading numbers
-        def = def.trim().to_string();
-        while let Some(first_char) = def.chars().next() {
-            if first_char.is_ascii_digit() && def.len() > 2 {
-                if let Some(space_pos) = def.find(' ') {
-                    def = def[space_pos + 1..].trim().to_string();
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        
-        // Re-capitalize after final cleanup
-        def = def.trim().to_string();
-        let mut chars = def.chars();
-        if let Some(first) = chars.next() {
-            def = first.to_uppercase().collect::<String>() + chars.as_str();
-        }
-        
-        // Remove unmatched opening parenthesis at end
-        def = def.trim().to_string();
-        if def.ends_with(" (") || def.ends_with("(") {
-            def = def.trim_end_matches('(').trim().to_string();
-        }
-        
-        // Check for unmatched parenthesis (more opening than closing)
-        let open_count = def.matches('(').count();
-        let close_count = def.matches(')').count();
-        if open_count > close_count {
-            // Find last unmatched opening paren and remove everything from there
-            if let Some(last_open) = def.rfind('(') {
-                def = def[..last_open].trim().to_string();
-            }
-        }
-        
-        // Remove punctuation marks that have spaces on both sides
-        for punct in [" . ", " , ", " ; ", " : ", " ! ", " ? "] {
-            def = def.replace(punct, " ");
-        }
-        
-        // Clean up any double spaces created
-        while def.contains("  ") {
-            def = def.replace("  ", " ");
-        }
-        def = def.trim().to_string();
-        
-        // Check for ampersands - reject clues containing them
-        if def.contains("&") {
-            return "Definition not available".to_string();
-        }
-        
-        // FINAL: Remove trailing "etc" (with or without period)
-        // This catches cases where "etc" appears at the very end
-        def = def.trim().to_string();
-        let def_lower = def.to_lowercase();
-        
-        // Remove various forms of "etc" at the end
-        if def_lower.ends_with(" etc.") {
-            def = def[..def.len() - 5].trim().to_string();
-        } else if def_lower.ends_with(" etc") {
-            def = def[..def.len() - 4].trim().to_string();
-        } else if def_lower.ends_with(", etc.") {
-            def = def[..def.len() - 6].trim().to_string();
-        } else if def_lower.ends_with(", etc") {
-            def = def[..def.len() - 5].trim().to_string();
-        }
-        
-        def
-    }
-    
+
     pub fn stats(&self) -> DictionaryStats {
         let total_len: usize = self.words.iter().map(|w| w.len()).sum();
         let avg_len = if self.words.is_empty() {
@@ -631,13 +361,49 @@ impl Dictionary {
         } else {
             total_len as f32 / self.words.len() as f32
         };
-        
+
         let max_len = self.words.iter().map(|w| w.len()).max().unwrap_or(0);
-        
+
         DictionaryStats {
             word_count: self.words.len(),
             avg_word_length: avg_len,
             max_word_length: max_len,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_normalize_word() {
+        assert_eq!(Dictionary::normalize_word("hello"), "HELLO");
+        assert_eq!(Dictionary::normalize_word("a cappella"), "ACAPPELLA");
+        assert_eq!(Dictionary::normalize_word("anno-Domini"), "ANNODOMINI");
+        assert_eq!(Dictionary::normalize_word("test-word"), "TESTWORD");
+    }
+
+    #[test]
+    fn test_clean_definition() {
+        let def1 = "to move quickly";
+        let cleaned1 = Dictionary::clean_definition(def1);
+        assert_eq!(cleaned1, "Move quickly");
+
+        let def2 = "a large animal (see elephant)";
+        let cleaned2 = Dictionary::clean_definition(def2);
+        assert_eq!(cleaned2, "A large animal");
+
+        let def3 = "very old, obs.";
+        let cleaned3 = Dictionary::clean_definition(def3);
+        assert!(cleaned3.contains("obsolete"));
+    }
+
+    #[test]
+    fn test_dictionary_loading() {
+        // This test requires the actual JSON file
+        // Just test that it doesn't panic
+        let dict = Dictionary::new();
+        assert!(dict.get_words().len() > 0);
     }
 }

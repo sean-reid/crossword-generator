@@ -35,23 +35,29 @@ impl CoverGenerator {
         color: bool,
     ) -> Result<String> {
         let mut svg = fs::read_to_string(template_path)?;
-        
+
         // Calculate and print spine info for user reference
         let spine_width_in = self.calculate_spine_width(color);
         let spine_width_px = spine_width_in * 96.0;
-        
+
         println!("\n📐 Spine Calculation:");
         println!("   Page count: {}", self.page_count);
-        println!("   Spine width: {:.4}\" ({:.1} px at 96 DPI)", spine_width_in, spine_width_px);
-        println!("   Interior: {}", if color { "Color" } else { "Black & White" });
+        println!(
+            "   Spine width: {:.4}\" ({:.1} px at 96 DPI)",
+            spine_width_in, spine_width_px
+        );
+        println!(
+            "   Interior: {}",
+            if color { "Color" } else { "Black & White" }
+        );
         println!("\n   💡 Ensure your template is designed for this spine width");
         println!("      Use: https://kdp.amazon.com/en_US/cover-templates");
-        
+
         // ONLY replace text - preserve all design and dimensions
         svg = svg.replace("CROSSWORD", title);
         svg = svg.replace("PUZZLES", subtitle);
         svg = svg.replace("BY SEAN REID", &format!("BY {}", author.to_uppercase()));
-        
+
         Ok(svg)
     }
 
@@ -64,12 +70,12 @@ impl CoverGenerator {
         author: &str,
     ) -> Result<String> {
         let mut svg = fs::read_to_string(template_path)?;
-        
+
         // ONLY replace text
         svg = svg.replace("CROSSWORD", title);
         svg = svg.replace("PUZZLES", subtitle);
         svg = svg.replace("BY SEAN REID", &format!("BY {}", author.to_uppercase()));
-        
+
         Ok(svg)
     }
 }
