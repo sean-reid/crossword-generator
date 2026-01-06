@@ -1,0 +1,86 @@
+# mise.toml - Pinned versions for reproducible builds
+# https://mise.jdx.dev/
+
+[tools]
+# Rust toolchain for WASM and CLI builds
+rust = "1.83.0"
+
+# Node.js for frontend build tooling (Vite, TypeScript, etc.)
+node = "22.12.0"
+
+# wasm-pack for building Rust -> WASM
+# Note: mise doesn't have native wasm-pack support, install via cargo
+# Run: cargo install wasm-pack@0.13.0 after mise install
+
+[env]
+# Ensure cargo binaries are in PATH
+_.path = ["$HOME/.cargo/bin"]
+
+# Optimize Rust builds
+CARGO_INCREMENTAL = "1"
+CARGO_NET_GIT_FETCH_WITH_CLI = "true"
+
+# Node environment
+NODE_ENV = "development"
+
+[tasks.install-wasm-pack]
+description = "Install wasm-pack for WASM builds"
+run = "cargo install wasm-pack@0.13.0 --locked"
+
+[tasks.install]
+description = "Install all dependencies"
+depends = ["install-wasm-pack"]
+run = "npm install"
+
+[tasks.dev]
+description = "Start development server"
+run = "npm run dev"
+
+[tasks.build-wasm]
+description = "Build WASM module"
+run = "npm run build:wasm"
+
+[tasks.build-wasm-debug]
+description = "Build WASM module with debug features"
+run = "npm run build:wasm:debug"
+
+[tasks.build-web]
+description = "Build web frontend"
+run = "npm run build:web"
+
+[tasks.build]
+description = "Build complete project (WASM + web)"
+run = "npm run build"
+
+[tasks.build-cli]
+description = "Build CLI tool"
+run = "npm run build:cli"
+
+[tasks.preview]
+description = "Preview production build"
+run = "npm run preview"
+
+[tasks.clean]
+description = "Clean build artifacts"
+run = """
+rm -rf dist/
+rm -rf wasm-pkg/
+rm -rf target/
+rm -rf node_modules/
+"""
+
+[tasks.check]
+description = "Run cargo check on all workspace members"
+run = "cargo check --workspace --all-features"
+
+[tasks.clippy]
+description = "Run clippy lints"
+run = "cargo clippy --workspace --all-features -- -D warnings"
+
+[tasks.fmt]
+description = "Format Rust code"
+run = "cargo fmt --all"
+
+[tasks.test]
+description = "Run Rust tests"
+run = "cargo test --workspace"
