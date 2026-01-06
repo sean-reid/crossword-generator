@@ -151,6 +151,83 @@ impl Dictionary {
         // Remove control characters immediately (except whitespace)
         def = def.chars().filter(|c| !c.is_control() || c.is_whitespace()).collect::<String>();
         
+        // EXPAND ABBREVIATIONS FIRST - before any splitting or enumeration handling
+        let abbreviations = [
+            (" esp. ", " especially "),
+            (" usu. ", " usually "),
+            (" e.g. ", " for example "),
+            (" i.e. ", " that is "),
+            (" colloq. ", " colloquially "),
+            (" archit. ", " architecture "),
+            (" biol. ", " biology "),
+            (" chem. ", " chemistry "),
+            (" geom. ", " geometry "),
+            (" gram. ", " grammar "),
+            (" math. ", " mathematics "),
+            (" naut. ", " nautical "),
+            (" astron. ", " astronomy "),
+            (" poet. ", " poetic "),
+            (" rhet. ", " rhetoric "),
+            (" sl. ", " slang "),
+            (" theol. ", " theology "),
+            (" zool. ", " zoology "),
+            (" physiol. ", " physiology "),
+            (" bot. ", " botany "),
+            (" eccl. ", " ecclesiastical "),
+            (" psychol. ", " psychology "),
+            (" sociol. ", " sociology "),
+            (" med. ", " medical "),
+            (" mus. ", " music "),
+            (" philos. ", " philosophy "),
+            (" archaeol. ", " archaeology "),
+            (" astrol. ", " astrology "),
+            (" anat. ", " anatomy "),
+            (" geog. ", " geography "),
+            (" geol. ", " geology "),
+            (" hist. ", " historical "),
+            (" myth. ", " mythology "),
+            (" pros. ", " prosody "),
+            (" relig. ", " religion "),
+            (" sc. ", " science "),
+            (" disp. ", " disputed "),
+            (" obs. ", " obsolete "),
+            (" etc. ", " et cetera "),
+            (" propr. ", " proprietary "),
+            (" attrib. ", " attributive "),
+            (" predic. ", " predicative "),
+        ];
+        
+        for (abbr, expansion) in &abbreviations {
+            def = def.replace(abbr, expansion);
+        }
+        
+        // Handle "etc." specially - often followed by important info
+        // Replace "etc." with "and similar" if followed by content, otherwise remove
+        let lower = def.to_lowercase();
+        if let Some(etc_pos) = lower.find(" etc.") {
+            let after_etc = etc_pos + 5; // length of " etc."
+            if after_etc < def.len() {
+                let rest = &def[after_etc..].trim();
+                if !rest.is_empty() && rest.chars().next().map(|c| c.is_alphabetic()).unwrap_or(false) {
+                    // There's more content after etc., keep it
+                    def = format!("{} and similar{}", &def[..etc_pos], &def[after_etc..]);
+                } else {
+                    // Nothing important after, just remove etc.
+                    def = format!("{}{}", &def[..etc_pos], &def[after_etc..]);
+                }
+            } else {
+                // etc. is at the end, remove it
+                def = def[..etc_pos].to_string();
+            }
+        }
+        
+        // Handle "etc" without period at end
+        if def.to_lowercase().ends_with(" etc") {
+            def = def[..def.len() - 4].trim().to_string();
+        }
+        
+        def = def.trim().to_string();
+        
         // Remove style labels
         for label in &["literary ", "formal ", "archaic "] {
             if def.to_lowercase().starts_with(label) {
@@ -174,8 +251,6 @@ impl Dictionary {
             "v. & n. ",
             "adj. & adv. ",
             "adv. & adj. ",
-            "adv. & predic.adj. ",
-            "adv. & predic. adj. ",
             "& predic.adj. ",
             "& predic. adj. ",
             "predic.adj. ",
@@ -189,7 +264,6 @@ impl Dictionary {
             "adj. ",
             "n. ",
             "v. ",
-            "v.aux.",
             "prep. ",
             "conj. "
         ] {
@@ -203,16 +277,17 @@ impl Dictionary {
         
         // Remove stylistic markers after POS (Poet., archaic, literary, etc.)
         let style_pattern = |s: &str| {
-            s.to_lowercase().starts_with("poet. ")
-                || s.to_lowercase().starts_with("archaic ")
-                || s.to_lowercase().starts_with("literary ")
-                || s.to_lowercase().starts_with("formal ")
-                || s.to_lowercase().starts_with("colloq. ")
-                || s.to_lowercase().starts_with("derog. ")
-                || s.to_lowercase().starts_with("joc. ")
-                || s.to_lowercase().starts_with("aux. ")
-                || s.to_lowercase().starts_with("int. ")
-                || s.to_lowercase().starts_with("scot. & n.engl. ")
+            let lower = s.to_lowercase();
+            lower.starts_with("poet. ")
+                || lower.starts_with("archaic ")
+                || lower.starts_with("literary ")
+                || lower.starts_with("formal ")
+                || lower.starts_with("colloq. ")
+                || lower.starts_with("derog. ")
+                || lower.starts_with("joc. ")
+                || lower.starts_with("aux. ")
+                || lower.starts_with("int. ")
+                || lower.starts_with("scot. & n.engl. ")
         };
         
         while style_pattern(&def) {
@@ -386,7 +461,7 @@ impl Dictionary {
         def = def.to_lowercase();
         
         // Strip any remaining em-dash + part of speech (after lowercasing)
-        if def.starts_with("—n.") || def.starts_with("—v.") || def.starts_with("—adj.") || def.starts_with("—adv.") || def.starts_with("—attrib. adj.") {
+        if def.starts_with("—n.") || def.starts_with("—v.") || def.starts_with("—adj.") || def.starts_with("—adv.") {
             // Find the space after the POS
             if let Some(space_pos) = def.find(' ') {
                 def = def[space_pos + 1..].trim().to_string();
@@ -397,25 +472,44 @@ impl Dictionary {
         }
         
         // If what remains is just labels with no content, reject it
-        if def.starts_with("colloq") || def.starts_with("esp") || def.starts_with("usu") {
+        if def.starts_with("colloq") || def.starts_with("especially") || def.starts_with("usually") {
             return "Definition not available".to_string();
         }
         
+        // Don't reject definitions after expansion - they're now complete words
+        // Only reject if truly too short
         if def.len() < 10 {
             return "Definition not available".to_string();
         }
         
-        // NOW check for letter enumeration with lowercase patterns
-        for enumerator in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] {
+        // SMARTER ENUMERATION DETECTION
+        // Check for letter/number enumeration - but avoid false positives
+        for enumerator in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '2', '3', '4', '5', '6', '7', '8', '9'] {
             let pattern1 = format!(". {}", enumerator);  // ". b", ". c", etc.
-            let pattern2 = format!(" {} ", enumerator);  // " b ", " c ", etc.
             
             if let Some(pos) = def.find(&pattern1) {
-                def = def[..pos].to_string();
-                break;
-            } else if let Some(pos) = def.find(&pattern2) {
-                def = def[..pos].to_string();
-                break;
+                // Check if the character after the enumerator is a space or end of string
+                let check_pos = pos + pattern1.len();
+                if check_pos >= def.len() || def.chars().nth(check_pos) == Some(' ') {
+                    def = def[..pos].to_string();
+                    break;
+                }
+            }
+            
+            // Only check " b ", " c " pattern for single letters, not numbers
+            if enumerator.is_alphabetic() {
+                let pattern2 = format!(" {} ", enumerator);
+                if let Some(pos) = def.find(&pattern2) {
+                    // Make sure this looks like an enumeration, not part of a phrase
+                    // Check if preceded by period or semicolon
+                    let looks_like_enum = pos == 0 || 
+                        def[..pos].ends_with('.') || 
+                        def[..pos].ends_with(';');
+                    if looks_like_enum {
+                        def = def[..pos].to_string();
+                        break;
+                    }
+                }
             }
         }
         
@@ -506,9 +600,25 @@ impl Dictionary {
         }
         def = def.trim().to_string();
         
-        // Check for ampersands
+        // Check for ampersands - reject clues containing them
         if def.contains("&") {
             return "Definition not available".to_string();
+        }
+        
+        // FINAL: Remove trailing "etc" (with or without period)
+        // This catches cases where "etc" appears at the very end
+        def = def.trim().to_string();
+        let def_lower = def.to_lowercase();
+        
+        // Remove various forms of "etc" at the end
+        if def_lower.ends_with(" etc.") {
+            def = def[..def.len() - 5].trim().to_string();
+        } else if def_lower.ends_with(" etc") {
+            def = def[..def.len() - 4].trim().to_string();
+        } else if def_lower.ends_with(", etc.") {
+            def = def[..def.len() - 6].trim().to_string();
+        } else if def_lower.ends_with(", etc") {
+            def = def[..def.len() - 5].trim().to_string();
         }
         
         def
