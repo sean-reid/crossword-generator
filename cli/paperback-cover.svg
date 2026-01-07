@@ -67,7 +67,7 @@
     <rect x="2593.6" y="0" width="2437.4" height="3075" fill="url(#gridPattern)" opacity="0.5"/>
     
     <!-- Large 16x16 crossword grid -->
-    <g id="crossword_main" transform="translate(2893.6, 650)">
+    <g id="crossword_main" transform="translate(2993.6, 650)">
       <!-- 16x16 grid fitting in 1640px = 102.5px per cell -->
       <g id="grid">
         <!-- Main grid outline -->
