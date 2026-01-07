@@ -8,6 +8,9 @@ rust = "1.83.0"
 # Node.js for frontend build tooling (Vite, TypeScript, etc.)
 node = "22.12.0"
 
+# Typescript compiler for building frontend code
+"npm:typescript" = "5.0"
+
 # wasm-pack for building Rust -> WASM
 # Note: mise doesn't have native wasm-pack support, install via cargo
 # Run: cargo install wasm-pack@0.13.0 after mise install
@@ -29,7 +32,6 @@ run = "cargo install wasm-pack@0.13.0 --locked"
 
 [tasks.install]
 description = "Install all dependencies"
-depends = ["install-wasm-pack"]
 run = "npm install"
 
 [tasks.dev]
