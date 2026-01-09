@@ -42,10 +42,11 @@
     <rect x="2437.5" y="0" width="156.1" height="3075" fill="#34495e"/>
     
     <!-- Spine text (rotated 90 degrees, reading from bottom to top) -->
-    <text x="2515.55" y="2050" text-anchor="middle" font-family="Georgia, serif" font-size="38" font-weight="bold" fill="#ffffff" letter-spacing="3" transform="rotate(-90 2515.55 2050)">
+    <!-- x adjusted to center the visual middle: spine_center + (font_size * 0.35) for baseline offset -->
+    <text x="2528.85" y="2050" text-anchor="middle" font-family="Georgia, serif" font-size="38" font-weight="bold" fill="#ffffff" letter-spacing="3" transform="rotate(-90 2528.85 2050)">
       CROSSWORD PUZZLES
     </text>
-    <text x="2515.55" y="750" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#ecf0f1" letter-spacing="2" transform="rotate(-90 2515.55 750)">
+    <text x="2526.05" y="750" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#ecf0f1" letter-spacing="2" transform="rotate(-90 2526.05 750)">
       SEAN REID
     </text>
   </g>
