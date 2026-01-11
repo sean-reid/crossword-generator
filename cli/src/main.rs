@@ -66,6 +66,10 @@ struct Args {
     #[arg(short, long)]
     description: Option<String>,
 
+    /// Path to introduction text file (plaintext)
+    #[arg(long)]
+    introduction: Option<PathBuf>,
+
     /// Cover subtitle (replaces "PUZZLES" in template)
     #[arg(long)]
     subtitle: Option<String>,
@@ -154,6 +158,13 @@ fn main() -> Result<()> {
     config.isbn = args.isbn;
     config.copyright_year = args.copyright;
     config.description = args.description;
+
+    // Read introduction text from file if provided
+    if let Some(ref intro_path) = args.introduction {
+        let intro_text = fs::read_to_string(intro_path)
+            .context(format!("Failed to read introduction file: {}", intro_path.display()))?;
+        config.introduction_text = Some(intro_text);
+    }
 
     // Set KDP format
     config.kdp_format = match args.kdp_format.to_lowercase().as_str() {

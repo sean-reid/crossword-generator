@@ -258,14 +258,45 @@ impl LatexGenerator {
         latex.push_str("\\setlength{\\parindent}{1.5em}\n");
         latex.push_str("\\setlength{\\parskip}{0.8em}\n\n");
 
-        // First paragraph with drop cap
-        latex.push_str("\\lettrine[lines=3,lhang=0.1,loversize=0.15]{C}{rossword} puzzles have captivated minds for over a century, beginning with Arthur Wynne's \\textit{Word-Cross} puzzle published in the \\textit{New York World} on December 21, 1913. What started as a simple diamond-shaped grid has evolved into one of the world's most beloved pastimes, challenging millions of solvers daily.\n\n");
+        // Use custom introduction text if provided, otherwise use default
+        if let Some(ref intro_text) = config.introduction_text {
+            // Split into paragraphs
+            let paragraphs: Vec<&str> = intro_text
+                .split("\n\n")
+                .map(|p| p.trim())
+                .filter(|p| !p.is_empty())
+                .collect();
 
-        latex.push_str("The beauty of a well-crafted crossword lies in the delicate balance between challenge and satisfaction. Each puzzle is a carefully constructed lattice of interlocking words, where every letter serves double duty, connecting both across and down entries. The best puzzles reward both knowledge and wordplay, offering that satisfying ``aha!'' moment when a difficult clue finally clicks.\n\n");
+            if !paragraphs.is_empty() {
+                // First paragraph with drop cap
+                let first_para = paragraphs[0];
+                if !first_para.is_empty() {
+                    let first_char = first_para.chars().next().unwrap();
+                    let rest = &first_para[first_char.len_utf8()..];
+                    latex.push_str(&format!(
+                        "\\lettrine[lines=3,lhang=0.1,loversize=0.15]{{{}}}{{{}}} {}\n\n",
+                        escape_latex(&first_char.to_string()),
+                        escape_latex(&rest.chars().take_while(|c| !c.is_whitespace()).collect::<String>()),
+                        escape_latex(&rest.chars().skip_while(|c| !c.is_whitespace()).collect::<String>())
+                    ));
+                }
 
-        latex.push_str("This collection is designed to provide hours of engaging entertainment. Whether you're a seasoned cruciverbalist or a curious beginner, these puzzles offer a perfect blend of vocabulary, general knowledge, and lateral thinking.\n\n");
+                // Remaining paragraphs
+                for para in paragraphs.iter().skip(1) {
+                    latex.push_str(&escape_latex(para));
+                    latex.push_str("\n\n");
+                }
+            }
+        } else {
+            // Default introduction text
+            latex.push_str("\\lettrine[lines=3,lhang=0.1,loversize=0.15]{C}{rossword} puzzles have captivated minds for over a century, beginning with Arthur Wynne's \\textit{Word-Cross} puzzle published in the \\textit{New York World} on December 21, 1913. What started as a simple diamond-shaped grid has evolved into one of the world's most beloved pastimes, challenging millions of solvers daily.\n\n");
 
-        latex.push_str("Each puzzle is printed with the grid on the right page and clues on the left, allowing you to see both simultaneously as you solve. Take your time, work in pencil, and remember: every puzzle has a solution, and the journey to finding it is half the fun.\n\n");
+            latex.push_str("The beauty of a well-crafted crossword lies in the delicate balance between challenge and satisfaction. Each puzzle is a carefully constructed lattice of interlocking words, where every letter serves double duty, connecting both across and down entries. The best puzzles reward both knowledge and wordplay, offering that satisfying ``aha!'' moment when a difficult clue finally clicks.\n\n");
+
+            latex.push_str("This collection is designed to provide hours of engaging entertainment. Whether you're a seasoned cruciverbalist or a curious beginner, these puzzles offer a perfect blend of vocabulary, general knowledge, and lateral thinking.\n\n");
+
+            latex.push_str("Each puzzle is printed with the grid on the right page and clues on the left, allowing you to see both simultaneously as you solve. Take your time, work in pencil, and remember: every puzzle has a solution, and the journey to finding it is half the fun.\n\n");
+        }
 
         latex.push_str("\\vspace{1.5cm}\n\n");
 

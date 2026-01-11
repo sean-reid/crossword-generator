@@ -23,6 +23,9 @@ Cargo.lock
 *.tex
 *.pdf
 
+# Other book files
+introduction.txt
+
 # IDE
 .vscode/
 .idea/

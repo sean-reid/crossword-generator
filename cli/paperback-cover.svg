@@ -16,7 +16,7 @@
     <rect x="0" y="0" width="2437.5" height="3075" fill="url(#backGrad)"/>
     
     <!-- Decorative crossword mini-grid (centered) -->
-    <g transform="translate(1068.75, 1237.5)">
+    <g transform="translate(1087.5, 1237.5)">
       <rect x="0" y="0" width="300" height="300" fill="none" stroke="#34495e" stroke-width="3"/>
       <line x1="75" y1="0" x2="75" y2="300" stroke="#34495e" stroke-width="1"/>
       <line x1="150" y1="0" x2="150" y2="300" stroke="#34495e" stroke-width="1"/>
@@ -29,10 +29,10 @@
     </g>
     
     <!-- Description text -->
-    <text x="1218.75" y="1900" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" fill="#2c3e50">
+    <text x="1237.5" y="1900" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" fill="#2c3e50">
       Challenge your mind with these
     </text>
-    <text x="1218.75" y="1955" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" fill="#2c3e50">
+    <text x="1237.5" y="1955" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" fill="#2c3e50">
       expertly crafted puzzles
     </text>
   </g>
@@ -68,7 +68,7 @@
     <rect x="2593.6" y="0" width="2437.4" height="3075" fill="url(#gridPattern)" opacity="0.5"/>
     
     <!-- Large 16x16 crossword grid -->
-    <g id="crossword_main" transform="translate(2993.6, 650)">
+    <g id="crossword_main" transform="translate(2973.6, 650)">
       <!-- 16x16 grid fitting in 1640px = 102.5px per cell -->
       <g id="grid">
         <!-- Main grid outline -->
