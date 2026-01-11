@@ -24,7 +24,7 @@ Cargo.lock
 *.pdf
 
 # Other book files
-introduction.txt
+introduction*.txt
 
 # IDE
 .vscode/
